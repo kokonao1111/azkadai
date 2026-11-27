@@ -18,7 +18,7 @@
   const toPhone = $("#toPhone");
   if (toPhone) {
     toPhone.addEventListener("click", () => {
-      localStorage.setItem("dotchi:view", "phone");
+      localStorage.removeItem("dotchi:view");
       location.href = "/phone?u=" + encodeURIComponent(location.pathname + location.search);
     });
   }
@@ -224,6 +224,41 @@
       } finally {
         btn.disabled = false;
       }
+    });
+  }
+
+  /* ---- お問い合わせ ---- */
+  const ct = $("#contactForm");
+  if (ct) {
+    const area = $("textarea", ct);
+    area.addEventListener("input", () => ($("#ctCount").textContent = area.value.length));
+    ct.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const err = $("#ctErr");
+      const btn = $("#ctSend");
+      err.hidden = true;
+      btn.disabled = true;
+      btn.textContent = "送信中…";
+      try {
+        const d = await post("/contact", new FormData(ct));
+        $("#ctNo").textContent = d.no;
+        $("#ctKind").textContent = new FormData(ct).get("kind");
+        ct.hidden = true;
+        $("#contactDone").hidden = false;
+        scrollTo(0, 0);
+      } catch (ex) {
+        err.textContent = ex.message;
+        err.hidden = false;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "送信する";
+      }
+    });
+    $("#ctAgain").addEventListener("click", () => {
+      ct.reset();
+      $("#ctCount").textContent = 0;
+      $("#contactDone").hidden = true;
+      ct.hidden = false;
     });
   }
 

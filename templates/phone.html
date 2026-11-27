@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>スマホ表示 - どっち派</title>
 <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=30">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=32">
 <script>if (window.innerWidth < 760) location.replace({{ u|tojson }});</script>
 </head>
 <body class="phone-page">
@@ -14,9 +14,13 @@
     <p class="phone-lead">スマホで見たときの画面です。<br>中はそのまま操作できます。</p>
     <button type="button" class="view-btn big" id="toPc">
       <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><rect x="1" y="2.5" width="14" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 14h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      PC表示にもどす
+      PC表示にする
     </button>
-    <button type="button" class="link-plain" id="replayTour">チュートリアルをもう一度</button>
+    <nav class="phone-links">
+      <button type="button" class="link-plain" data-go="/about">あそびかた</button>
+      <button type="button" class="link-plain" data-go="/contact">お問い合わせ</button>
+      <button type="button" class="link-plain" id="replayTour">チュートリアルをもう一度</button>
+    </nav>
   </aside>
 
   <div class="phone" aria-label="スマホの画面">
@@ -34,9 +38,10 @@
     catch (_) { return "/"; }
   };
   document.getElementById("toPc").addEventListener("click", () => {
-    localStorage.removeItem("dotchi:view");
+    localStorage.setItem("dotchi:view", "pc");
     location.href = current();
   });
+  document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => { frame.src = b.dataset.go; }));
   document.getElementById("replayTour").addEventListener("click", () => {
     frame.src = "/?tour=1";
   });

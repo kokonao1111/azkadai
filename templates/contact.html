@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}お問い合わせ - どっち派{% endblock %}
+{% block main %}
+<div class="contact">
+  <form class="ct-card" id="contactForm">
+    <h1>お問い合わせ</h1>
+    <p class="ct-lead">不具合や「こんな機能がほしい」を送ってください。運営が読みます。</p>
+
+    <div class="a-field">
+      <span>どんなこと？</span>
+      <div class="ct-kinds">
+        {% for k in kinds %}
+        <label><input type="radio" name="kind" value="{{ k }}" {{ 'checked' if loop.first }}><i>{{ k }}</i></label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <label class="a-field">
+      <span>内容</span>
+      <textarea name="body" rows="5" maxlength="400" required placeholder="例）投票したのに結果が出ないときがある"></textarea>
+      <small class="ct-count"><b id="ctCount">0</b>/400</small>
+    </label>
+
+    <label class="a-field">
+      <span>関係するページ（あれば）</span>
+      <input name="page" maxlength="200" placeholder="例）修学旅行の二択" autocomplete="off">
+    </label>
+
+    <p class="ct-note">名前・電話番号・メールなど個人情報は書かないでね。返信はできません。</p>
+    <p class="err" id="ctErr" hidden></p>
+    <button class="a-send" id="ctSend">送信する</button>
+  </form>
+
+  <div class="ct-card ct-done" id="contactDone" hidden>
+    <div class="ct-check" aria-hidden="true">
+      <svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24" fill="none" stroke="currentColor" stroke-width="3"/><path d="M15 27l7 7 15-16" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <h1>送信しました</h1>
+    <p class="ct-lead">ありがとう！ 内容は運営が確認します。</p>
+    <dl class="ct-receipt">
+      <div><dt>受付番号</dt><dd id="ctNo">-</dd></div>
+      <div><dt>種類</dt><dd id="ctKind">-</dd></div>
+    </dl>
+    <a class="a-send" href="/">二択にもどる</a>
+    <button type="button" class="ct-again" id="ctAgain">もう1件送る</button>
+  </div>
+</div>
+{% endblock %}

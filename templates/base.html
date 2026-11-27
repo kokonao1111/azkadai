@@ -15,7 +15,7 @@
   // スマホ表示にしている人は、PCで開いたらスマホ枠のページへ
   (function () {
     if (window.self !== window.top) document.documentElement.classList.add("in-frame");
-    else if (localStorage.getItem("dotchi:view") === "phone" && window.innerWidth >= 760)
+    else if (localStorage.getItem("dotchi:view") !== "pc" && window.innerWidth >= 760)
       location.replace("/phone?u=" + encodeURIComponent(location.pathname + location.search));
   })();
 </script>
@@ -34,6 +34,7 @@
         スマホ表示
       </button>
       <a href="/about" class="help-link">あそびかた</a>
+      <a href="/contact" class="help-link">お問い合わせ</a>
       <button type="button" class="make-btn top-make" data-open="make"><i class="ka">A</i><i class="kb">B</i>つくる</button>
       {% if me_user %}
       <a href="/me" class="me-link" aria-label="マイページ">{{ avatar(me_user, 32) }}</a>

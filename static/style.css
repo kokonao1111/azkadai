@@ -1469,3 +1469,81 @@ h1.q { font-size: 21px; }
   .g-hero h1 { font-size: 34px; }
   .g-tabs, .g-acc { grid-template-columns: 1fr; }
 }
+
+/* 写真は小さめに */
+.pics { gap: 6px; }
+.pics { max-width: 420px; }
+.pic { aspect-ratio: 4 / 3; max-height: 104px; border-radius: 10px; }
+h1.q + .pics .pic { max-height: 140px; }
+
+/* お問い合わせ */
+.contact { display: flex; justify-content: center; padding: 18px 0 40px; }
+
+.ct-card {
+  width: 100%;
+  max-width: 460px;
+  padding: 18px;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 20px;
+}
+
+.ct-card h1 { margin: 0 0 4px; font-size: 22px; font-weight: 900; }
+.ct-lead { margin: 0 0 4px; font-size: 13px; color: var(--sub); }
+
+.ct-kinds { display: flex; flex-wrap: wrap; gap: 6px; }
+.ct-kinds input { position: absolute; opacity: 0; pointer-events: none; }
+.ct-kinds i {
+  display: block;
+  padding: 6px 13px;
+  font-size: 13px;
+  font-weight: 700;
+  font-style: normal;
+  border: 1.5px solid var(--line);
+  border-radius: 99px;
+  cursor: pointer;
+}
+.ct-kinds input:checked + i { color: #fff; background: var(--ink); }
+.ct-kinds input:focus-visible + i { outline: 2px solid var(--b); outline-offset: 2px; }
+
+.ct-card textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.6;
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  outline: none;
+  resize: vertical;
+}
+
+.ct-card textarea:focus { box-shadow: 0 0 0 3px var(--b-soft); }
+.ct-count { text-align: right; }
+.ct-note { margin: 14px 0 0; font-size: 12px; color: var(--sub); }
+.ct-card .err { margin-top: 12px; }
+.ct-card .a-send:disabled { opacity: .5; }
+
+.ct-done { text-align: center; }
+.ct-check { width: 64px; height: 64px; margin: 6px auto 12px; color: #1f9d55; }
+.ct-check svg { width: 100%; height: 100%; }
+.ct-check path { stroke-dasharray: 40; stroke-dashoffset: 40; animation: draw .5s .15s ease-out forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+.ct-receipt {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 16px 0 0;
+  padding: 12px;
+  background: var(--paper);
+  border-radius: 12px;
+}
+.ct-receipt dt { font-size: 11px; color: var(--sub); }
+.ct-receipt dd { margin: 0; font-family: ui-monospace, Menlo, monospace; font-size: 16px; font-weight: 700; }
+.ct-again { margin-top: 12px; padding: 0; font-size: 13px; color: var(--sub); background: none; border: 0; text-decoration: underline; }
+
+.me-foot { display: flex; justify-content: center; gap: 18px; margin: 30px 0 0; font-size: 12px; }
+.me-foot a { color: var(--sub); }
+.g-contact { font-size: 12px; color: var(--sub); }
+.phone-links { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }

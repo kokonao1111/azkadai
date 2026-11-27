@@ -36,8 +36,8 @@
 <form class="say{{ ' locked' if not q.mine }} say-{{ q.mine or 'none' }}" id="say">
   <p class="err" id="sayErr" hidden></p>
   <div class="say-row">
-    <input name="body" maxlength="60" autocomplete="off" required
-      placeholder="{{ (q.a if q.mine == 'a' else q.b) ~ '派として言う' if q.mine else '投票すると書けます' }}"
+    <input name="body" maxlength="20" autocomplete="off" required
+      placeholder="{{ (q.a if q.mine == 'a' else q.b) ~ '派として言う（20字）' if q.mine else '投票すると書けます' }}"
       {{ 'disabled' if not q.mine }}>
     <button {{ 'disabled' if not q.mine }}>言う</button>
   </div>

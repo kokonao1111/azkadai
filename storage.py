@@ -188,3 +188,4 @@ class Store:
         self.comments = make("comments")
         self.users = make("users")
         self.mine = make("mine")  # 自分がつくった二択と削除キー
+        self.contact = make("contact")  # お問い合わせ

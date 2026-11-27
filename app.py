@@ -32,7 +32,8 @@ SALT = app.secret_key
 db = Store(BASE_DIR)
 QPK = "q"
 
-TEXT_MAX, OPT_MAX, NAME_MAX, COMMENT_MAX = 40, 16, 10, 60
+TEXT_MAX, OPT_MAX, NAME_MAX, COMMENT_MAX = 40, 16, 10, 20
+COMMENTS_PER_PERSON = 5
 HIDE_AFTER_REPORTS = 3
 DURATIONS = {"1h": "1時間", "today": "今日中", "3d": "3日間"}
 TABS = {"new": "新着", "hot": "白熱", "soon": "締切まぢか", "done": "結果発表"}
@@ -71,7 +72,28 @@ def hash_key(k):
     return hashlib.sha256((SALT + k).encode()).hexdigest()
 
 
-def bad_text(text):
+JP = re.compile(r"[\u3040-\u30ff\u3400-\u9fff]")
+SYMBOL = re.compile(r"[^\w\s\u3040-\u30ff\u3400-\u9fff]")
+
+
+def looks_like_junk(text, strict=False):
+    """暗号みたいな文字列・同じ文字の連打・記号だらけを弾く。"""
+    t = text.strip()
+    if re.search(r"(.)\1{4,}", t):
+        return "同じ文字の連続は書けません。"
+    if re.search(r"[A-Za-z0-9]{12,}", t):
+        return "意味のない文字列は書けません。"
+    if len(t) >= 4 and len(SYMBOL.findall(t)) / len(t) > 0.5:
+        return "記号だけのコメントは書けません。"
+    if strict and len(t) >= 6 and not JP.search(t) and t.count(" ") < 1:
+        return "意味のない文字列は書けません。"
+    return None
+
+
+def bad_text(text, strict=False):
+    junk = looks_like_junk(text, strict) if text else None
+    if junk:
+        return junk
     for pat, what in PERSONAL:
         if pat.search(text):
             return f"{what}は書けません。"
@@ -388,14 +410,19 @@ def comment(qid):
     body = (request.form.get("body") or "").strip()
     if not body or len(body) > COMMENT_MAX:
         return jsonify(error=f"{COMMENT_MAX}字までです。"), 400
-    msg = bad_text(body)
+    msg = bad_text(body, strict=True)
     if msg:
         return jsonify(error=msg), 400
+    past = db.comments.query(qid)
+    if sum(1 for c in past if c.get("by") == g.vid) >= COMMENTS_PER_PERSON:
+        return jsonify(error=f"1つの二択に書けるのは{COMMENTS_PER_PERSON}回までです。"), 429
+    if any(c["body"] == body for c in past):
+        return jsonify(error="同じコメントがもうあります。"), 400
     if too_fast("comment", 8):
         return jsonify(error="ちょっと待ってからもう一回。"), 429
     t = now()
     c = {"PartitionKey": qid, "RowKey": seq_id(t), "side": v["side"], "body": body,
-         "created": t.isoformat(), "reports": 0}
+         "by": g.vid, "created": t.isoformat(), "reports": 0}
     db.comments.insert(c)
     db.questions.bump(QPK, qid, {"ncom": 1})
     return jsonify(ok=True, side=c["side"], body=body)
@@ -426,6 +453,29 @@ def delete(qid):
     db.images.delete(q.get("img_b"))
     db.questions.delete(QPK, qid)
     return jsonify(ok=True)
+
+
+# ---------- お問い合わせ ----------
+
+CONTACT_KINDS = ["不具合", "ほしい機能", "こまっている", "その他"]
+
+
+@app.route("/contact", methods=["GET", "POST"])
+def contact():
+    if request.method == "GET":
+        return render_template("contact.html", kinds=CONTACT_KINDS)
+    kind = request.form.get("kind") if request.form.get("kind") in CONTACT_KINDS else "その他"
+    body = (request.form.get("body") or "").strip()
+    if len(body) < 5 or len(body) > 400:
+        return jsonify(error="5〜400字で書いてください。"), 400
+    if too_fast("contact", 30):
+        return jsonify(error="少し待ってからもう一回送ってください。"), 429
+    t = now()
+    no = f"{t.strftime('%m%d')}-{secrets.token_hex(2).upper()}"
+    db.contact.insert({"PartitionKey": t.strftime("%Y-%m"), "RowKey": seq_id(t), "no": no, "kind": kind,
+                       "body": body, "page": (request.form.get("page") or "")[:200],
+                       "uid": g.user["RowKey"] if g.user else "", "created": t.isoformat()})
+    return jsonify(ok=True, no=no)
 
 
 # ---------- アカウント ----------
