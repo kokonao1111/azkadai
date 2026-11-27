@@ -841,57 +841,161 @@ h1.q { font-size: 21px; }
   text-underline-offset: 3px;
 }
 
+.phone-stage { position: relative; flex: none; }
+
 .phone {
-  position: relative;
-  flex: none;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 414px;
-  height: min(868px, calc(100vh - 48px));
+  height: 868px;
   padding: 12px;
-  background: #1f1e1c;
-  border-radius: 58px;
-  box-shadow: inset 0 0 0 2px #3a3835, 0 30px 60px -30px rgba(40, 30, 10, .55);
+  transform-origin: 0 0;
+  background: #121212;
+  border-radius: 64px;
+  box-shadow:
+    0 0 0 2px #5b5852,
+    0 0 0 5px #8d8a83,
+    0 0 0 6px #4a4843,
+    0 40px 70px -30px rgba(40, 30, 10, .55),
+    0 12px 24px -12px rgba(40, 30, 10, .35);
 }
 
 .phone-screen {
   position: relative;
-  width: 100%;
-  height: 100%;
+  width: 390px;
+  height: 844px;
   overflow: hidden;
   background: var(--paper);
-  border-radius: 46px;
+  border-radius: 52px;
 }
 
-.phone-screen iframe {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border: 0;
-  padding-top: 40px;
+.status {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 54px;
+  padding: 4px 30px 0 46px;
+  font: 600 16px/1 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  color: #000;
   background: var(--paper);
+  pointer-events: none;
+}
+
+.st-time { width: 54px; letter-spacing: -.01em; }
+
+.st-icons { display: flex; align-items: center; gap: 6px; }
+.st-icons svg { fill: #000; }
+
+.battery {
+  position: relative;
+  width: 26px;
+  height: 12.5px;
+  border: 1.2px solid rgba(0, 0, 0, .4);
+  border-radius: 4px;
+}
+
+.battery::after {
+  content: "";
+  position: absolute;
+  right: -4px;
+  top: 3.5px;
+  width: 2px;
+  height: 4px;
+  background: rgba(0, 0, 0, .4);
+  border-radius: 0 1px 1px 0;
+}
+
+.battery i {
+  position: absolute;
+  inset: 1.5px;
+  right: 6px;
+  background: #000;
+  border-radius: 2px;
 }
 
 .island {
   position: absolute;
-  top: 10px;
+  top: 11px;
   left: 50%;
-  z-index: 2;
-  width: 112px;
-  height: 30px;
-  margin-left: -56px;
-  background: #1f1e1c;
+  width: 124px;
+  height: 36px;
+  margin-left: -62px;
+  background: #000;
   border-radius: 20px;
+}
+
+.phone-screen iframe {
+  position: absolute;
+  top: 54px;
+  left: 0;
+  display: block;
+  width: 390px;
+  height: 790px;
+  border: 0;
+  background: var(--paper);
+}
+
+.home-bar {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  z-index: 3;
+  width: 134px;
+  height: 5px;
+  margin-left: -67px;
+  background: #111;
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.glass {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  border-radius: 52px;
+  background: linear-gradient(125deg, rgba(255, 255, 255, .09) 0%, rgba(255, 255, 255, 0) 32%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .25);
+  pointer-events: none;
 }
 
 .phone-btn {
   position: absolute;
-  width: 4px;
-  background: #2c2a27;
+  width: 5px;
+  background: linear-gradient(90deg, #6f6c66, #9c9992 50%, #6f6c66);
   border-radius: 2px;
 }
 
-.phone-btn.b1 { left: -4px; top: 130px; height: 32px; }
-.phone-btn.b2 { left: -4px; top: 185px; height: 58px; }
-.phone-btn.b3 { right: -4px; top: 200px; height: 90px; }
+.phone-btn.act { left: -9px; top: 168px; height: 32px; }
+.phone-btn.vol-up { left: -9px; top: 226px; height: 62px; }
+.phone-btn.vol-down { left: -9px; top: 300px; height: 62px; }
+.phone-btn.power { right: -9px; top: 262px; height: 100px; }
+
+/* スマホの枠の中：スクロールバーを消して、指っぽいカーソルに */
+.in-frame, .in-frame body { scrollbar-width: none; }
+.in-frame ::-webkit-scrollbar { display: none; }
+
+.in-frame body {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Ccircle cx='14' cy='14' r='11' fill='rgba(28,27,25,.18)' stroke='rgba(28,27,25,.55)' stroke-width='1.5'/%3E%3C/svg%3E") 14 14, auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.in-frame a, .in-frame button, .in-frame label, .in-frame summary, .in-frame .side, .in-frame .pic {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Ccircle cx='14' cy='14' r='11' fill='rgba(28,27,25,.32)' stroke='rgba(28,27,25,.7)' stroke-width='1.5'/%3E%3C/svg%3E") 14 14, pointer;
+}
+
+.in-frame .top { position: sticky; }
+
+@media (max-width: 759px) {
+  .in-frame body { padding-bottom: 92px; }
+  .in-frame .bottom-nav { padding-bottom: 26px; }
+  .in-frame .say { bottom: 88px; }
+}
 
 @media (max-width: 759px) {
   .phone-side { display: none; }
@@ -1547,3 +1651,9 @@ h1.q + .pics .pic { max-height: 140px; }
 .me-foot a { color: var(--sub); }
 .g-contact { font-size: 12px; color: var(--sub); }
 .phone-links { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+
+/* スマホにはホバーがないので、枠の中では消す */
+.in-frame .card:not(.voted) .pic:hover { outline: none; }
+.in-frame .card:not(.voted) .sa:hover { background: var(--a-soft); }
+.in-frame .card:not(.voted) .sb:hover { background: var(--b-soft); }
+.in-frame .card:not(.voted) .side:active { filter: brightness(.92); }

@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>スマホ表示 - どっち派</title>
+<title>どっち派</title>
 <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=32">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=33">
 <script>if (window.innerWidth < 760) location.replace({{ u|tojson }});</script>
 </head>
 <body class="phone-page">
@@ -23,28 +23,65 @@
     </nav>
   </aside>
 
-  <div class="phone" aria-label="スマホの画面">
-    <span class="phone-btn b1"></span><span class="phone-btn b2"></span><span class="phone-btn b3"></span>
-    <div class="phone-screen">
-      <span class="island" aria-hidden="true"></span>
-      <iframe id="screen" src="{{ u }}" title="どっち派（スマホ表示）"></iframe>
+  <div class="phone-stage" id="stage">
+    <div class="phone" id="phone" aria-label="スマホの画面">
+      <span class="phone-btn act"></span>
+      <span class="phone-btn vol-up"></span>
+      <span class="phone-btn vol-down"></span>
+      <span class="phone-btn power"></span>
+      <div class="phone-screen">
+        <div class="status" aria-hidden="true">
+          <span class="st-time" id="stTime">9:41</span>
+          <span class="island"></span>
+          <span class="st-icons">
+            <svg viewBox="0 0 18 12" width="18" height="12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+            <svg viewBox="0 0 16 12" width="16" height="12"><path d="M8 11.2 5.6 8.8a3.4 3.4 0 0 1 4.8 0z"/><path d="M3.4 6.6a6.5 6.5 0 0 1 9.2 0l-1.3 1.3a4.7 4.7 0 0 0-6.6 0z"/><path d="M1.2 4.4a9.6 9.6 0 0 1 13.6 0l-1.3 1.3a7.8 7.8 0 0 0-11 0z"/></svg>
+            <span class="battery"><i></i></span>
+          </span>
+        </div>
+        <iframe id="screen" src="{{ u }}" title="どっち派（スマホ表示）"></iframe>
+        <span class="home-bar" aria-hidden="true"></span>
+        <span class="glass" aria-hidden="true"></span>
+      </div>
     </div>
   </div>
 
 <script>
   const frame = document.getElementById("screen");
+  const phone = document.getElementById("phone");
+  const stage = document.getElementById("stage");
+  const W = 414, H = 868;
+
+  // 本物のスマホと同じ 390×844 の画面のまま、ウィンドウに合わせて全体を縮める
+  const fit = () => {
+    const k = Math.min(1, (innerHeight - 48) / H);
+    phone.style.transform = `scale(${k})`;
+    stage.style.width = W * k + "px";
+    stage.style.height = H * k + "px";
+  };
+  fit();
+  addEventListener("resize", fit);
+
+  const clock = () => {
+    const d = new Date();
+    document.getElementById("stTime").textContent = d.getHours() + ":" + String(d.getMinutes()).padStart(2, "0");
+  };
+  clock();
+  setInterval(clock, 10000);
+
   const current = () => {
     try { return frame.contentWindow.location.pathname + frame.contentWindow.location.search; }
     catch (_) { return "/"; }
   };
+  frame.addEventListener("load", () => {
+    try { document.title = frame.contentDocument.title; } catch (_) {}
+  });
   document.getElementById("toPc").addEventListener("click", () => {
     localStorage.setItem("dotchi:view", "pc");
     location.href = current();
   });
   document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => { frame.src = b.dataset.go; }));
-  document.getElementById("replayTour").addEventListener("click", () => {
-    frame.src = "/?tour=1";
-  });
+  document.getElementById("replayTour").addEventListener("click", () => { frame.src = "/?tour=1"; });
 </script>
 </body>
 </html>
