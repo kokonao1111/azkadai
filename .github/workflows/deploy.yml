@@ -1,0 +1,30 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: check
+        run: |
+          pip install -r requirements.txt
+          python -c "import app"
+
+      - name: zip
+        run: zip -r release.zip . -x ".git/*" ".github/*" "tools/*" "data/*" "*.md"
+
+      - uses: azure/webapps-deploy@v3
+        with:
+          app-name: houkago-kokuban
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: release.zip
