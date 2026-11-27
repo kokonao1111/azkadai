@@ -3,11 +3,14 @@
 {% block main %}
 <section class="you">
   {% if me.ready %}
-  <p class="you-type">あなたは <b>{{ me.name }}</b></p>
-  <p class="you-sub">少数派率 {{ me.rate }}%（{{ me.n }}問）・{{ me.desc }}</p>
+  <p class="you-line">あなたは<b>{{ me.name }}</b><span class="you-rate">少数派率 {{ me.rate }}%</span></p>
+  <span class="you-meter" style="--r: {{ me.rate }}%" aria-hidden="true"></span>
   {% else %}
-  <p class="you-type">あと<b>{{ me.need }}問</b>投票すると、あなたが何派かわかる</p>
-  <p class="you-sub">3人以上が投票した二択で集計します</p>
+  <p class="you-line">
+    何派か判定まで
+    <span class="dots" aria-hidden="true">{% for i in range(3) %}<i class="{{ 'on' if i < 3 - me.need }}"></i>{% endfor %}</span>
+    <span class="you-rate">あと{{ me.need }}問</span>
+  </p>
   {% endif %}
 </section>
 
@@ -29,7 +32,7 @@
   <p>意見が割れている二択はまだありません</p>
   {% else %}
   <p>まだ二択がありません</p>
-  <button type="button" class="make-btn big" data-open="make">最初の二択をつくる</button>
+  <button type="button" class="make-btn big" data-open="make"><i class="ka">A</i><i class="kb">B</i>最初の二択をつくる</button>
   {% endif %}
 </div>
 {% endif %}
