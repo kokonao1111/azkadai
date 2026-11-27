@@ -23,7 +23,7 @@ from storage import make_store
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 JST = timezone(timedelta(hours=9))
-ERASE_HOUR = 5  # 毎朝5時に黒板を消す
+RESET_HOUR = 5  # 毎朝5時に全部消える
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024
@@ -32,35 +32,19 @@ SALT = app.secret_key
 
 store = make_store(BASE_DIR)
 
-CHALKS = {
-    "white": "ふつう",
-    "yellow": "質問",
-    "pink": "急ぎ",
-    "blue": "部活・行事",
+TAGS = {
+    "talk": "雑談",
+    "ask": "質問",
+    "now": "いま",
+    "event": "おしらせ",
 }
-
-PERIODS = [
-    ((5, 0), (8, 40), "朝"),
-    ((8, 40), (9, 30), "1限"),
-    ((9, 30), (9, 40), "休み時間"),
-    ((9, 40), (10, 30), "2限"),
-    ((10, 30), (10, 40), "休み時間"),
-    ((10, 40), (11, 30), "3限"),
-    ((11, 30), (11, 40), "休み時間"),
-    ((11, 40), (12, 30), "4限"),
-    ((12, 30), (13, 20), "昼休み"),
-    ((13, 20), (14, 10), "5限"),
-    ((14, 10), (14, 20), "休み時間"),
-    ((14, 20), (15, 10), "6限"),
-    ((15, 10), (19, 0), "放課後"),
-]
 
 NAME_MAX = 12
 BODY_MAX = 140
 REPLY_MAX = 80
 HIDE_AFTER_REPORTS = 3
 
-# 個人情報が書き込まれないように、それっぽいものは弾く
+# 個人情報っぽいものは書き込ませない
 PERSONAL_PATTERNS = [
     (re.compile(r"0\d{1,4}[-ー－\s]?\d{1,4}[-ー－\s]?\d{3,4}"), "電話番号"),
     (re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+"), "メールアドレス"),
@@ -78,35 +62,23 @@ def now_jst():
 
 
 def board_day(dt=None):
-    """5時を区切りにした「黒板の日付」。深夜2時の書き込みは前日の黒板に乗る。"""
+    """5時を区切りにした日付。深夜2時の書き込みは前の日の分になる。"""
     dt = dt or now_jst()
-    if dt.hour < ERASE_HOUR:
+    if dt.hour < RESET_HOUR:
         dt = dt - timedelta(days=1)
     return dt.strftime("%Y-%m-%d")
 
 
-def next_erase(dt=None):
+def next_reset(dt=None):
     dt = dt or now_jst()
-    t = dt.replace(hour=ERASE_HOUR, minute=0, second=0, microsecond=0)
+    t = dt.replace(hour=RESET_HOUR, minute=0, second=0, microsecond=0)
     if dt >= t:
         t += timedelta(days=1)
     return t
 
 
-def period_of(dt):
-    hm = (dt.hour, dt.minute)
-    for start, end, label in PERIODS:
-        if start <= hm < end:
-            return label
-    return "夜"
-
-
-def in_class(label):
-    return label.endswith("限")
-
-
 def row_key(dt):
-    # 新しい順に並ぶように、時刻を反転させてキーにする
+    # 新しい順に並ぶように時刻を反転してキーにする
     inv = 10**13 - int(dt.timestamp() * 1000)
     return f"{inv:013d}-{uuid.uuid4().hex[:6]}"
 
@@ -118,18 +90,17 @@ def hash_key(key):
 def check_text(text):
     for pat, what in PERSONAL_PATTERNS:
         if pat.search(text):
-            return f"{what}っぽいものが入ってるみたい。黒板はみんなが見るので、個人情報は書かないでね。"
+            return f"{what}は書き込めません。"
     low = text.lower()
     for w in NG_WORDS:
         if w in low:
-            return "その言葉は黒板には書けません。言い方を変えてみて。"
+            return "その言葉は書き込めません。"
     return None
 
 
 def client_id():
     fwd = request.headers.get("X-Forwarded-For", "")
-    ip = fwd.split(",")[0].split(":")[0].strip() or request.remote_addr or "?"
-    return ip
+    return fwd.split(",")[0].split(":")[0].strip() or request.remote_addr or "?"
 
 
 def too_fast(seconds=15):
@@ -142,7 +113,7 @@ def too_fast(seconds=15):
 
 
 def shrink_image(file_storage):
-    """画像を小さくして、位置情報などのEXIFを消す。"""
+    """長い辺を1080pxにして、位置情報などのEXIFを消す。"""
     from PIL import Image, ImageOps
 
     try:
@@ -153,17 +124,11 @@ def shrink_image(file_storage):
     img = img.convert("RGB")
     img.thumbnail((1080, 1080))
     out = io.BytesIO()
-    img.save(out, "JPEG", quality=82, optimize=True)  # exif は渡さない = 消える
+    img.save(out, "JPEG", quality=82, optimize=True)  # exifを渡さないので消える
     return out.getvalue()
 
 
-def tilt(row):
-    # 投稿ごとにちょっとだけ傾ける。毎回同じ角度になるようにキーから決める
-    n = int(hashlib.md5(row.encode()).hexdigest()[:4], 16)
-    return round((n % 70) / 10 - 3.5, 1)
-
-
-def load_board(day):
+def load_posts(day):
     rows = store.list_day(day)
     posts, replies = [], defaultdict(list)
     for r in rows:
@@ -176,21 +141,13 @@ def load_board(day):
     posts.sort(key=lambda r: r["RowKey"])
     for p in posts:
         p["replies"] = sorted(replies.get(p["RowKey"], []), key=lambda r: r["RowKey"], reverse=True)
-        p["tilt"] = tilt(p["RowKey"])
+        if p.get("tag") not in TAGS:
+            p["tag"] = "talk"
     return posts
 
 
-def pick_duty(day):
-    """その日いちばん最初に書いた人が日直。"""
-    rows = [r for r in store.list_day(day) if not r.get("parent")]
-    if not rows:
-        return None
-    first = max(rows, key=lambda r: r["RowKey"])
-    return first.get("name") or "名無し"
-
-
 def public(r):
-    keys = ["RowKey", "name", "body", "chalk", "period", "image", "tally", "created", "parent"]
+    keys = ["RowKey", "name", "body", "tag", "image", "likes", "created", "parent"]
     return {k: r.get(k) for k in keys}
 
 
@@ -202,47 +159,34 @@ def hm_filter(iso):
         return ""
 
 
-@app.template_filter("tally")
-def tally_filter(n):
-    """数を「正」の字で書く。5本で1文字。"""
-    n = int(n or 0)
-    strokes = ["", "一", "丅", "下", "止"]
-    return "正" * (n // 5) + strokes[n % 5]
-
-
 @app.context_processor
 def inject():
-    return {"chalks": CHALKS}
+    return {"tags": TAGS}
 
 
 @app.route("/")
 def index():
-    day = board_day()
     now = now_jst()
-    posts = load_board(day)
-    chalk = request.args.get("chalk")
-    if chalk in CHALKS:
-        posts = [p for p in posts if p.get("chalk") == chalk]
+    day = board_day(now)
+    posts = load_posts(day)
+    tag = request.args.get("tag")
+    if tag in TAGS:
+        posts = [p for p in posts if p.get("tag") == tag]
     yesterday = (datetime.strptime(day, "%Y-%m-%d") - timedelta(days=1)).strftime("%Y-%m-%d")
     try:
-        erased = store.count_day(yesterday)
+        gone = store.count_day(yesterday)
     except Exception:
-        erased = 0
-    weekday = "月火水木金土日"[datetime.strptime(day, "%Y-%m-%d").weekday()]
-    d = datetime.strptime(day, "%Y-%m-%d")
+        gone = 0
+    reset = next_reset(now)
+    left = (reset - now).total_seconds()
     return render_template(
         "index.html",
         posts=posts,
-        day=day,
-        month=d.month,
-        mday=d.day,
-        weekday=weekday,
-        duty=pick_duty(day),
-        period=period_of(now),
-        erase_at=next_erase(now).isoformat(),
-        erased=erased,
-        current_chalk=chalk if chalk in CHALKS else None,
-        board_bg=store.asset_url("assets/board.jpg"),
+        reset_at=reset.isoformat(),
+        left_ratio=round(left / 86400, 4),
+        gone=gone,
+        current_tag=tag if tag in TAGS else None,
+        logo=store.asset_url("assets/logo.svg"),
         error=request.args.get("e"),
     )
 
@@ -251,44 +195,42 @@ def index():
 def create_post():
     name = (request.form.get("name") or "").strip()[:NAME_MAX]
     body = (request.form.get("body") or "").strip()
-    chalk = request.form.get("chalk") if request.form.get("chalk") in CHALKS else "white"
+    tag = request.form.get("tag") if request.form.get("tag") in TAGS else "talk"
     key = (request.form.get("key") or "").strip()[:20]
     wants_json = request.headers.get("Accept", "").startswith("application/json")
 
     def fail(msg, code=400):
         if wants_json:
             return jsonify(error=msg), code
-        return redirect(url_for("index", e=msg) + "#tray")
+        return redirect(url_for("index", e=msg))
 
     if not body:
-        return fail("なにか書いてね。")
+        return fail("本文が空です。")
     if len(body) > BODY_MAX:
-        return fail(f"黒板が足りません。{BODY_MAX}文字までにしてね。")
+        return fail(f"{BODY_MAX}文字までです。")
     msg = check_text(body) or check_text(name)
     if msg:
         return fail(msg)
     if too_fast():
-        return fail("チョークが折れそう…少し待ってからもう一回。", 429)
+        return fail("連続では書き込めません。少し待ってください。", 429)
 
     image_url = ""
     f = request.files.get("image")
     if f and f.filename:
         data = shrink_image(f)
         if data is None:
-            return fail("その画像は貼れませんでした。jpg か png でお願い。")
+            return fail("この画像は使えません。jpg・png・webpにしてください。")
         image_url = store.put_image(data)
 
     now = now_jst()
-    period = period_of(now)
     entity = {
         "PartitionKey": board_day(now),
         "RowKey": row_key(now),
-        "name": name or "名無し",
+        "name": name,
         "body": body,
-        "chalk": chalk,
-        "period": period,
+        "tag": tag,
         "image": image_url,
-        "tally": 0,
+        "likes": 0,
         "reports": 0,
         "key": hash_key(key) if key else "",
         "parent": "",
@@ -308,22 +250,21 @@ def reply(row):
         abort(404)
     body = (request.form.get("body") or "").strip()
     if not body or len(body) > REPLY_MAX:
-        return jsonify(error=f"返事は{REPLY_MAX}文字までです。"), 400
+        return jsonify(error=f"返信は{REPLY_MAX}文字までです。"), 400
     msg = check_text(body)
     if msg:
         return jsonify(error=msg), 400
     if too_fast(8):
-        return jsonify(error="ちょっと待ってからもう一回。"), 429
+        return jsonify(error="少し待ってください。"), 429
     now = now_jst()
     entity = {
         "PartitionKey": day,
         "RowKey": row_key(now),
         "name": "",
         "body": body,
-        "chalk": parent.get("chalk", "white"),
-        "period": period_of(now),
+        "tag": parent.get("tag", "talk"),
         "image": "",
-        "tally": 0,
+        "likes": 0,
         "reports": 0,
         "key": "",
         "parent": row,
@@ -333,12 +274,12 @@ def reply(row):
     return jsonify(ok=True, reply=public(entity))
 
 
-@app.post("/post/<row>/tally")
-def add_tally(row):
-    r = store.bump(board_day(), row, "tally")
+@app.post("/post/<row>/like")
+def like(row):
+    r = store.bump(board_day(), row, "likes")
     if not r:
         abort(404)
-    return jsonify(tally=int(r["tally"]), mark=tally_filter(r["tally"]))
+    return jsonify(likes=int(r["likes"]))
 
 
 @app.post("/post/<row>/report")
@@ -349,15 +290,15 @@ def report(row):
     return jsonify(ok=True, hidden=int(r["reports"]) >= HIDE_AFTER_REPORTS)
 
 
-@app.post("/post/<row>/erase")
-def erase(row):
+@app.post("/post/<row>/delete")
+def delete(row):
     day = board_day()
     r = store.get(day, row)
     if not r:
         abort(404)
     key = (request.form.get("key") or "").strip()
     if not r.get("key") or not key or hash_key(key) != r["key"]:
-        return jsonify(error="消しゴム番号がちがいます。"), 403
+        return jsonify(error="削除キーがちがいます。"), 403
     for child in store.list_day(day):
         if child.get("parent") == row:
             store.delete(day, child["RowKey"])
@@ -366,16 +307,10 @@ def erase(row):
     return jsonify(ok=True)
 
 
-@app.get("/api/board")
-def api_board():
-    """新しい書き込みが来たか確かめる用。"""
-    day = board_day()
-    posts = load_board(day)
-    return jsonify(
-        day=day,
-        count=len(posts),
-        latest=posts[0]["RowKey"] if posts else None,
-    )
+@app.get("/api/latest")
+def api_latest():
+    posts = load_posts(board_day())
+    return jsonify(count=len(posts), latest=posts[0]["RowKey"] if posts else None)
 
 
 @app.get("/local-images/<name>")
@@ -390,9 +325,10 @@ def about():
 
 @app.errorhandler(413)
 def too_large(_):
+    msg = "画像が大きすぎます（8MBまで）。"
     if request.headers.get("Accept", "").startswith("application/json"):
-        return jsonify(error="画像が大きすぎます（8MBまで）。"), 413
-    return redirect(url_for("index", e="画像が大きすぎます（8MBまで）。"))
+        return jsonify(error=msg), 413
+    return redirect(url_for("index", e=msg))
 
 
 if __name__ == "__main__":

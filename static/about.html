@@ -3,171 +3,56 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>学級通信 ― 放課後の黒板について</title>
+<title>使い方 - きょうだけ</title>
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Yomogi&family=Zen+Kaku+Gothic+New:wght@400;700&family=Zen+Old+Mincho:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css?v=10">
 <style>
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    padding: 36px 14px 60px;
-    font-family: "Zen Kaku Gothic New", "Hiragino Sans", sans-serif;
-    color: #2b2723;
-    background: #d9d1bd repeating-linear-gradient(90deg, rgba(120,100,70,.06) 0 1px, transparent 1px 46px);
-  }
-  .paper {
-    position: relative;
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 40px 44px 46px;
-    background: #fdfcf8;
-    box-shadow: 0 1px 0 #e9e4d7, 0 16px 30px -16px rgba(60, 40, 20, .5);
-    transform: rotate(-.4deg);
-  }
-  .paper::before, .paper::after {
-    /* セロテープ */
-    content: "";
-    position: absolute;
-    top: -12px;
-    width: 96px;
-    height: 26px;
-    background: rgba(240, 232, 200, .7);
-    box-shadow: 0 1px 2px rgba(0,0,0,.08);
-  }
-  .paper::before { left: 30px; transform: rotate(-5deg); }
-  .paper::after { right: 30px; transform: rotate(4deg); }
-
-  .mast {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: end;
-    gap: 12px;
-    padding-bottom: 12px;
-    border-bottom: 4px double #2b2723;
-  }
-  .mast h1 {
-    margin: 0;
-    font-family: "Zen Old Mincho", serif;
-    font-size: 44px;
-    letter-spacing: .2em;
-    line-height: 1;
-  }
-  .mast h1 small {
-    display: block;
-    margin-bottom: 8px;
-    font-family: "Zen Kaku Gothic New", sans-serif;
-    font-size: 13px;
-    letter-spacing: .1em;
-    font-weight: 400;
-  }
-  .mast .no {
-    text-align: right;
-    font-size: 13px;
-    line-height: 1.7;
-  }
-  .lead {
-    margin: 22px 0 6px;
-    font-size: 15px;
-    line-height: 2;
-  }
-  h2 {
-    display: inline-block;
-    margin: 30px 0 10px;
-    padding: 2px 12px;
-    font-size: 17px;
-    color: #fff;
-    background: #2b2723;
-    letter-spacing: .1em;
-  }
-  ol, ul { padding-left: 1.4em; line-height: 2; font-size: 15px; margin: 0; }
-  li::marker { color: #9a8f7c; }
-  .two {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px 30px;
-  }
-  .chalks { list-style: none; padding: 0; }
-  .chalks li { display: flex; align-items: center; gap: 10px; }
-  .chalks i {
-    display: inline-block;
-    width: 34px; height: 9px;
-    border-radius: 3px;
-    box-shadow: inset 0 -2px 0 rgba(0,0,0,.12), 0 1px 1px rgba(0,0,0,.25);
-  }
-  .memo {
-    margin-top: 30px;
-    padding: 16px 20px;
-    font-family: "Yomogi", sans-serif;
-    font-size: 17px;
-    line-height: 1.9;
-    background: #fff7b8;
-    transform: rotate(.8deg);
-    box-shadow: 0 6px 10px -6px rgba(0,0,0,.3);
-  }
-  .back {
-    display: inline-block;
-    margin-top: 30px;
-    padding: 10px 20px;
-    color: #f2efe6;
-    background: #2b4337;
-    text-decoration: none;
-    font-family: "Yomogi", sans-serif;
-    font-size: 17px;
-    border: 6px solid #8a5a33;
-  }
-  @media (max-width: 640px) {
-    .paper { padding: 30px 20px 34px; transform: none; }
-    .mast h1 { font-size: 32px; }
-    .two { grid-template-columns: 1fr; }
-  }
+  .doc h1 { font-size: 22px; margin: 28px 0 4px; }
+  .doc .lead { margin: 0 0 24px; color: var(--muted); }
+  .doc h2 { font-size: 15px; margin: 28px 0 8px; }
+  .doc ul { margin: 0; padding-left: 1.2em; }
+  .doc li + li { margin-top: 4px; }
+  .doc dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; }
+  .doc dt { font-size: 13px; }
+  .doc dd { margin: 0; color: var(--muted); }
+  .doc .back { display: inline-block; margin-top: 32px; color: var(--accent); font-weight: 700; text-decoration: none; }
 </style>
 </head>
 <body>
-<article class="paper">
-  <header class="mast">
-    <h1><small>放課後の黒板 だより</small>学級通信</h1>
-    <p class="no">第1号<br>発行：日直</p>
-  </header>
-
-  <p class="lead">
-    教室のうしろの黒板って、休み時間に誰かが落書きして、次の日の朝にはきれいに消えてますよね。
-    この掲示板はそれをそのままネットに持ってきました。書いたことは<strong>毎朝5時に全部消えます</strong>。
-    だから、どうでもいいことを気軽に書いてください。
-  </p>
-
-  <h2>使い方</h2>
-  <ol>
-    <li>下のチョーク置き場からチョークの色を選ぶ</li>
-    <li>書きたいことを書いて「黒板に書く」</li>
-    <li>いいなと思ったら「わかる」を押す。正の字で数が増えます</li>
-    <li>返事をしたいときは「書き足す」</li>
-  </ol>
-
-  <h2>チョークの色</h2>
-  <ul class="chalks two">
-    <li><i style="background:#f2efe6"></i>白 … ふつうの話・雑談</li>
-    <li><i style="background:#f2dc7c"></i>黄 … 質問・教えてほしいこと</li>
-    <li><i style="background:#f3a6ab"></i>赤 … 急ぎ・みんなに知らせたい</li>
-    <li><i style="background:#a2cde6"></i>青 … 部活・行事・イベント</li>
-  </ul>
-
-  <h2>この黒板のきまり</h2>
-  <ul>
-    <li>名前・学校名・電話番号・メール・SNSのIDは書けません（書こうとすると止まります）</li>
-    <li>悪口は書けません。いやな書き込みは「先生に言う」で通報。3人が通報すると見えなくなります</li>
-    <li>写真の位置情報（GPS）は、貼るときに自動で消しています</li>
-    <li>自分の書き込みを消したいときは、書くときに「消しゴム番号」を決めておいてください</li>
-    <li>その日いちばん最初に書いた人が、黒板の右はしに日直として書かれます</li>
-  </ul>
-
-  <div class="memo">
-    授業中に書くと「授業中」のハンコが押されます。<br>
-    バレても日直は責任をとりません。
+<header class="top">
+  <div class="top-in">
+    <a class="logo" href="/"><img src="/static/favicon.svg" alt="" width="26" height="26">きょうだけ</a>
   </div>
+</header>
 
-  <a class="back" href="/">黒板にもどる</a>
-</article>
+<main class="wrap doc">
+  <h1>使い方</h1>
+  <p class="lead">書いたことは、あしたの朝5時に全部消えます。</p>
+
+  <h2>できること</h2>
+  <ul>
+    <li>名前なしで投稿できます（140文字まで）</li>
+    <li>写真を1枚つけられます</li>
+    <li>「わかる」と返信ができます</li>
+    <li>削除キーを決めておくと、自分の投稿をあとで消せます</li>
+  </ul>
+
+  <h2>タグ</h2>
+  <dl>
+    <dt>雑談</dt><dd>なんでも</dd>
+    <dt>質問</dt><dd>課題の範囲、テストの日など</dd>
+    <dt>いま</dt><dd>電車が遅れてる、購買のパンが売り切れ、など今だけの情報</dd>
+    <dt>おしらせ</dt><dd>部活の試合、文化祭、ライブなど</dd>
+  </dl>
+
+  <h2>ルール</h2>
+  <ul>
+    <li>電話番号・メールアドレス・LINE ID・住所は投稿できません</li>
+    <li>悪口は投稿できません。3人が通報すると表示されなくなります</li>
+    <li>写真の位置情報は投稿するときに自動で削除されます</li>
+  </ul>
+
+  <a class="back" href="/">← もどる</a>
+</main>
 </body>
 </html>

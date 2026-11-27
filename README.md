@@ -1,8 +1,8 @@
-# 放課後の黒板
+# きょうだけ
 
-毎朝5時に全部消える、高校生のための黒板型の掲示板。
+書いたことは、あしたの朝5時に全部消える。高校生のための掲示板。
 
-https://houkago-kokuban.azurewebsites.net/
+https://kyoudake.azurewebsites.net/
 
 - 要件定義：[requirements.md](requirements.md)
 - Flask / Azure App Service / Table Storage / Blob Storage

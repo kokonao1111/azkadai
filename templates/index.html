@@ -3,168 +3,117 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>放課後の黒板</title>
-<meta name="description" content="毎朝5時に消える、高校生のための黒板。">
-<meta name="theme-color" content="#2b4337">
+<title>きょうだけ</title>
+<meta name="description" content="書いたことは、あしたの朝5時に全部消える。高校生のための掲示板。">
+<meta name="theme-color" content="#ffffff">
 <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Yomogi&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=5">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=10">
 </head>
 <body>
 
-<header class="plate-wrap">
-  <a class="plate" href="/">
-    <span class="plate-sub">ほうかごの こくばん</span>
-    <span class="plate-main">放課後の黒板</span>
-  </a>
-  <a class="notice-link" href="/about">学級通信を読む</a>
+<header class="top">
+  <div class="top-in">
+    <a class="logo" href="/">
+      {% if logo %}<img src="{{ logo }}" alt="" width="26" height="26">{% endif %}
+      きょうだけ
+    </a>
+    <a class="top-link" href="/about">使い方</a>
+  </div>
+  <div class="life" style="--left: {{ left_ratio }}">
+    <div class="life-bar"></div>
+  </div>
 </header>
 
-<main class="room">
-  <section class="board" id="board"{% if board_bg %} style="--board-img: url('{{ board_bg }}')"{% endif %}>
+<main class="wrap">
+  <p class="reset">あと <b class="countdown" data-reset="{{ reset_at }}">--:--</b> で全部消えます</p>
 
-    <aside class="duty" aria-label="日付と日直">
-      <span class="duty-date"><span class="tcy">{{ month }}</span>月<span class="tcy">{{ mday }}</span>日（{{ weekday }}）</span>
-      <span class="duty-name">日直　{{ duty or "まだいない" }}</span>
-    </aside>
-
-    <div class="board-head">
-      <p class="now">
-        <span>いま <b>{{ period }}</b></span>
-        <span>書き込み {{ posts|length }}件</span>
-        <span>黒板消しまで <b class="countdown" data-erase="{{ erase_at }}">--:--:--</b></span>
-      </p>
-      <nav class="filters" aria-label="チョークの色でしぼる">
-        <a href="/" class="{{ 'on' if not current_chalk }}">ぜんぶ</a>
-        {% for key, label in chalks.items() %}
-        <a href="/?chalk={{ key }}" class="c-{{ key }} {{ 'on' if current_chalk == key }}">{{ label }}</a>
-        {% endfor %}
-      </nav>
-    </div>
-
-    <p class="fresh-note" id="freshNote" hidden><a href="/">新しい書き込みがあります（タップで更新）</a></p>
-
-    {% if posts %}
-    <ol class="writings">
-      {% for p in posts %}
-      <li class="writing c-{{ p.chalk }}" id="p-{{ p.RowKey }}" style="--tilt: {{ p.tilt }}deg" data-row="{{ p.RowKey }}">
-        {% if p.image %}
-        <figure class="photo">
-          <span class="magnet"></span>
-          <img src="{{ p.image }}" alt="{{ p.name }}が貼った写真" loading="lazy">
-        </figure>
-        {% endif %}
-        <p class="text">{{ p.body }}</p>
-        <p class="meta">
-          {% if p.period.endswith('限') %}<span class="stamp" title="授業中に書いたらしい">授業中</span>{% endif %}
-          <span>{{ p.period }}</span>
-          <span>{{ p.created|hm }}</span>
-          <span class="who">{{ p.name }}</span>
-        </p>
-
-        {% if p.replies %}
-        <ul class="replies">
-          {% for r in p.replies %}
-          <li><span class="arrow">↳</span>{{ r.body }}</li>
-          {% endfor %}
-        </ul>
-        {% endif %}
-
-        <div class="acts">
-          <button type="button" class="tally-btn" data-act="tally" aria-label="わかる">
-            <span class="tally">{{ p.tally|tally }}</span>
-            <span class="tally-label">わかる</span>
-          </button>
-          <button type="button" class="link-btn" data-act="reply">書き足す</button>
-          <button type="button" class="link-btn dim" data-act="more" aria-label="その他">…</button>
-        </div>
-
-        <form class="mini reply-form" hidden>
-          <input name="body" maxlength="80" placeholder="ひとこと書き足す（80字）" autocomplete="off" required>
-          <button>書く</button>
-        </form>
-        <div class="mini more-box" hidden>
-          <form class="erase-form">
-            <input name="key" inputmode="numeric" maxlength="20" placeholder="消しゴム番号" autocomplete="off" required>
-            <button>消す</button>
-          </form>
-          <button type="button" class="link-btn dim" data-act="report">先生に言う（通報）</button>
-        </div>
-      </li>
+  <form class="composer" id="composer" action="/post" method="post" enctype="multipart/form-data">
+    {% if error %}<p class="err" role="alert">{{ error }}</p>{% endif %}
+    <p class="err" id="formErr" role="alert" hidden></p>
+    <textarea name="body" maxlength="140" rows="2" required placeholder="なにか書く" aria-label="本文"></textarea>
+    <div class="tag-pick" role="radiogroup" aria-label="タグ">
+      {% for key, label in tags.items() %}
+      <label>
+        <input type="radio" name="tag" value="{{ key }}" {{ 'checked' if loop.first }}>
+        <span>{{ label }}</span>
+      </label>
       {% endfor %}
-    </ol>
-    {% else %}
-    <div class="empty">
-      {% if current_chalk %}
-      <p>この色のチョークで書いた人はまだいません。</p>
-      {% else %}
-      <p>まだ誰も書いてない。</p>
-      <p class="small">いちばん最初に書いた人が、今日の日直です。</p>
-      {% endif %}
     </div>
-    {% endif %}
+    <div class="fields">
+      <input name="name" maxlength="12" placeholder="名前（なしでOK）" autocomplete="nickname" aria-label="名前">
+      <input name="key" maxlength="20" inputmode="numeric" placeholder="削除キー" autocomplete="off" aria-label="削除キー">
+    </div>
+    <div class="composer-foot">
+      <label class="photo-btn">
+        <input type="file" name="image" accept="image/jpeg,image/png,image/webp">
+        <span>写真</span>
+      </label>
+      <span class="file-name" id="fileName"></span>
+      <span class="count"><span id="count">0</span>/140</span>
+      <button class="send" type="submit">投稿</button>
+    </div>
+  </form>
 
-    {% if erased %}
-    <p class="smudge">きのうの黒板には {{ erased }}件 書いてありました。もう消えました。</p>
-    {% endif %}
+  <nav class="tabs" aria-label="タグでしぼる">
+    <a href="/" class="{{ 'on' if not current_tag }}">すべて</a>
+    {% for key, label in tags.items() %}
+    <a href="/?tag={{ key }}" class="{{ 'on' if current_tag == key }}">{{ label }}</a>
+    {% endfor %}
+  </nav>
 
-    <!-- チョーク置き場＝投稿フォーム -->
-    <form class="tray" id="tray" action="/post" method="post" enctype="multipart/form-data">
-      <div class="tray-sticks" role="radiogroup" aria-label="チョークの色">
-        {% for key, label in chalks.items() %}
-        <label class="stick s-{{ key }}">
-          <input type="radio" name="chalk" value="{{ key }}" {{ 'checked' if loop.first }}>
-          <span class="stick-body"></span>
-          <span class="stick-label">{{ label }}</span>
-        </label>
+  <p class="fresh" id="freshNote" hidden><a href="/">新しい投稿があります</a></p>
+
+  {% if posts %}
+  <ol class="feed">
+    {% for p in posts %}
+    <li class="post" id="p-{{ p.RowKey }}" data-row="{{ p.RowKey }}">
+      <div class="post-head">
+        <span class="name{{ ' anon' if not p.name }}">{{ p.name or "名無し" }}</span>
+        <span class="time">{{ p.created|hm }}</span>
+        <span class="tag t-{{ p.tag }}">{{ tags[p.tag] }}</span>
+      </div>
+      <p class="body">{{ p.body }}</p>
+      {% if p.image %}
+      <a href="{{ p.image }}" target="_blank" rel="noopener"><img class="pic" src="{{ p.image }}" alt="" loading="lazy"></a>
+      {% endif %}
+
+      {% if p.replies %}
+      <ul class="replies">
+        {% for r in p.replies %}
+        <li><span class="time">{{ r.created|hm }}</span>{{ r.body }}</li>
         {% endfor %}
-        <button type="button" class="eraser" id="openTray" aria-expanded="false" aria-controls="trayPanel">
-          <span>書く</span>
-        </button>
+      </ul>
+      {% endif %}
+
+      <div class="acts">
+        <button type="button" class="like" data-act="like" aria-label="わかる">わかる <span class="n">{{ p.likes or "" }}</span></button>
+        <button type="button" data-act="reply">返信{% if p.replies %} <span class="n">{{ p.replies|length }}</span>{% endif %}</button>
+        <button type="button" class="more" data-act="more" aria-label="メニュー">•••</button>
       </div>
 
-      <div class="tray-panel" id="trayPanel" hidden>
-        {% if error %}<p class="err" role="alert">{{ error }}</p>{% endif %}
-        <p class="err" id="formErr" role="alert" hidden></p>
-        <label class="field big">
-          <span class="lbl">黒板に書くこと</span>
-          <textarea name="body" maxlength="140" rows="3" required placeholder="購買のメロンパン、今日は2限の休みで売り切れた"></textarea>
-          <span class="count"><b id="count">0</b>/140</span>
-        </label>
-        <div class="row">
-          <label class="field">
-            <span class="lbl">名前（なくてもいい）</span>
-            <input name="name" maxlength="12" placeholder="名無し" autocomplete="nickname">
-          </label>
-          <label class="field">
-            <span class="lbl">消しゴム番号（あとで消す用）</span>
-            <input name="key" maxlength="20" inputmode="numeric" placeholder="例：0721" autocomplete="off">
-          </label>
-        </div>
-        <div class="field file">
-          <span class="lbl">写真を貼る（位置情報は自動で消えます）</span>
-          <label class="file-pick">
-            <input type="file" name="image" accept="image/jpeg,image/png,image/webp">
-            <span class="file-btn">写真をえらぶ</span>
-            <span class="file-name" id="fileName">えらんでない</span>
-          </label>
-        </div>
-        <div class="tray-foot">
-          <p class="rule">名前・学校名・電話番号・SNSのIDは書けません。毎朝5時に全部消えます。</p>
-          <button class="write-btn" type="submit">黒板に書く</button>
-        </div>
+      <form class="inline reply-form" hidden>
+        <input name="body" maxlength="80" placeholder="返信を書く" autocomplete="off" required>
+        <button>送信</button>
+      </form>
+      <div class="inline more-box" hidden>
+        <form class="delete-form">
+          <input name="key" inputmode="numeric" maxlength="20" placeholder="削除キー" autocomplete="off" required>
+          <button>削除</button>
+        </form>
+        <button type="button" class="report" data-act="report">通報する</button>
       </div>
-    </form>
-  </section>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <p class="empty">まだ投稿はありません</p>
+  {% endif %}
+
+  {% if gone %}
+  <p class="gone">きのうの {{ gone }} 件は消えました</p>
+  {% endif %}
 </main>
 
-<footer class="foot">
-  <p>放課後の黒板 ・ <a href="/about">使い方とルール</a></p>
-</footer>
-
-<script src="{{ url_for('static', filename='app.js') }}?v=5" defer></script>
-{% if error %}<script>document.documentElement.dataset.openTray = "1";</script>{% endif %}
+<script src="{{ url_for('static', filename='app.js') }}?v=10" defer></script>
 </body>
 </html>
