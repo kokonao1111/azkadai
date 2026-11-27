@@ -227,6 +227,37 @@
     });
   }
 
+  /* ---- 友達にも聞く（シェア） ---- */
+  const share = $("#share");
+  if (share) {
+    const url = share.dataset.url;
+    const text = share.dataset.text;
+    $("#shLine").href = "https://line.me/R/share?text=" + encodeURIComponent(text + "\n" + url);
+    $("#shX").href = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text) + "&url=" + encodeURIComponent(url) + "&hashtags=" + encodeURIComponent("どっち派");
+    const copy = $("#shCopy");
+    copy.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(text + "\n" + url);
+      } catch (_) {
+        const ta = document.createElement("textarea");
+        ta.value = text + "\n" + url;
+        document.body.append(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+      }
+      copy.textContent = "コピーしました！";
+      copy.classList.add("done");
+      setTimeout(() => { copy.textContent = "リンクをコピー"; copy.classList.remove("done"); }, 1800);
+    });
+    // スマホならOSの共有メニューも使える
+    if (navigator.share && matchMedia("(pointer: coarse)").matches) {
+      const more = $("#shMore");
+      more.hidden = false;
+      more.addEventListener("click", () => navigator.share({ title: "どっち派", text, url }).catch(() => {}));
+    }
+  }
+
   /* ---- お問い合わせ ---- */
   const ct = $("#contactForm");
   if (ct) {

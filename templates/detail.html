@@ -1,15 +1,34 @@
 {% extends "base.html" %}
 {% from "_card.html" import card %}
 {% block title %}{{ q.text }} - どっち派{% endblock %}
+{% block meta %}
+<meta name="description" content="{{ q.a }} vs {{ q.b }}　あなたはどっち派？">
+<meta property="og:title" content="{{ q.text }}">
+<meta property="og:description" content="{{ q.a }} vs {{ q.b }}　あなたはどっち派？（{{ q.total }}人が投票）">
+<meta property="og:url" content="{{ url_for('detail', qid=q.id, _external=True) }}">
+{% endblock %}
 {% block main %}
 <a class="back" href="/">← もどる</a>
 {% if own and made %}
 <div class="made-note">
   <b>二択を出しました！</b>
   <p>削除キーは <code>{{ own.key }}</code>。マイページでいつでも確認できます。</p>
+  <p class="made-share">↓ 友達に送って、どっち派か聞いてみよう</p>
 </div>
 {% endif %}
 {{ card(q, link=False) }}
+
+<div class="share" id="share"
+  data-url="{{ url_for('detail', qid=q.id, _external=True) }}"
+  data-text="{{ q.text }}&#10;{{ q.a }} vs {{ q.b }}&#10;あなたはどっち派？">
+  <span class="share-label">友達にも聞く</span>
+  <div class="share-btns">
+    <a class="sh sh-line" target="_blank" rel="noopener" id="shLine">LINE</a>
+    <a class="sh sh-x" target="_blank" rel="noopener" id="shX">X</a>
+    <button type="button" class="sh sh-copy" id="shCopy">リンクをコピー</button>
+    <button type="button" class="sh sh-more" id="shMore" hidden>その他</button>
+  </div>
+</div>
 
 {% if q.mine and not q.closed and not q.switched %}
 <p class="turn"><button type="button" class="turn-btn" data-side="{{ 'b' if q.mine == 'a' else 'a' }}">{{ q.b if q.mine == 'a' else q.a }}に寝返る</button><span>（1回だけ）</span></p>

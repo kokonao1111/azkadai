@@ -12,6 +12,7 @@ from flask import (
     Flask, abort, g, jsonify, redirect, render_template, request,
     send_from_directory, session, url_for,
 )
+from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from storage import Store
@@ -20,6 +21,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 JST = timezone(timedelta(hours=9))
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # Azure の前段から https を正しく受け取る
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024
 app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(16)
 app.config.update(

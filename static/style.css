@@ -1657,3 +1657,34 @@ h1.q + .pics .pic { max-height: 140px; }
 .in-frame .card:not(.voted) .sa:hover { background: var(--a-soft); }
 .in-frame .card:not(.voted) .sb:hover { background: var(--b-soft); }
 .in-frame .card:not(.voted) .side:active { filter: brightness(.92); }
+
+/* 友達にも聞く */
+.share {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: var(--card);
+  border: 1.5px dashed #bdb6a8;
+  border-radius: 16px;
+}
+
+.share-label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 900; }
+.share-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.sh {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  color: var(--ink);
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: 99px;
+  cursor: pointer;
+}
+
+.sh-line { color: #fff; background: #06c755; border-color: #06c755; }
+.sh-x { color: #fff; background: #111; border-color: #111; }
+.sh-copy.done { color: #fff; background: #1f9d55; border-color: #1f9d55; }
+.made-share { margin-top: 6px !important; font-weight: 800; }

@@ -4,13 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{% block title %}どっち派{% endblock %}</title>
+{% block meta %}
 <meta name="description" content="ぜんぶ二択の掲示板。タップ1回で参加できる。">
+<meta property="og:title" content="どっち派 - ぜんぶ二択の掲示板">
+<meta property="og:description" content="タップ1回で参加。あなたはどっち派？">
+{% endblock %}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="どっち派">
+<meta property="og:image" content="{{ url_for('static', filename='og.png', _external=True) }}">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#f3efe6">
 <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=33">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=35">
 <script>
   // PCで開いても、基本はスマホの枠で見せる
   (function () {
@@ -112,6 +120,6 @@
   </form>
 </dialog>
 
-<script src="{{ url_for('static', filename='app.js') }}?v=34" defer></script>
+<script src="{{ url_for('static', filename='app.js') }}?v=35" defer></script>
 </body>
 </html>
