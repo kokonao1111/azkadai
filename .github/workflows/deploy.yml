@@ -15,13 +15,15 @@ jobs:
         with:
           python-version: "3.12"
 
+      # 無料プランはCPU時間が少ないので、ライブラリはここで入れてから送る
+      - name: install
+        run: pip install -r requirements.txt --target packages
+
       - name: check
-        run: |
-          pip install -r requirements.txt
-          python -c "import app"
+        run: PYTHONPATH=packages python -c "import app"
 
       - name: zip
-        run: zip -r release.zip . -x ".git/*" ".github/*" "tools/*" "data/*" "*.md"
+        run: zip -qr release.zip app.py storage.py requirements.txt templates static packages -x "*/__pycache__/*"
 
       - uses: azure/webapps-deploy@v3
         with:

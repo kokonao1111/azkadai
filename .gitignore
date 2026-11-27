@@ -6,3 +6,4 @@ data/
 *.PublishSettings
 *.publishsettings
 .DS_Store
+packages/
