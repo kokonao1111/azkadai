@@ -18,7 +18,7 @@
   const toPhone = $("#toPhone");
   if (toPhone) {
     toPhone.addEventListener("click", () => {
-      localStorage.removeItem("dotchi:view");
+      sessionStorage.removeItem("dotchi:view");
       location.href = "/phone?u=" + encodeURIComponent(location.pathname + location.search);
     });
   }

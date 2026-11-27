@@ -12,11 +12,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=33">
 <script>
-  // スマホ表示にしている人は、PCで開いたらスマホ枠のページへ
+  // PCで開いても、基本はスマホの枠で見せる
   (function () {
     if (window.self !== window.top) document.documentElement.classList.add("in-frame");
-    else if (localStorage.getItem("dotchi:view") !== "pc" && window.innerWidth >= 760)
-      location.replace("/phone?u=" + encodeURIComponent(location.pathname + location.search));
+    else {
+      localStorage.removeItem("dotchi:view"); // 前の「ずっとPC表示」の設定は消す
+      if (sessionStorage.getItem("dotchi:view") !== "pc" && window.innerWidth >= 760)
+        location.replace("/phone?u=" + encodeURIComponent(location.pathname + location.search));
+    }
   })();
 </script>
 </head>
@@ -109,6 +112,6 @@
   </form>
 </dialog>
 
-<script src="{{ url_for('static', filename='app.js') }}?v=33" defer></script>
+<script src="{{ url_for('static', filename='app.js') }}?v=34" defer></script>
 </body>
 </html>
