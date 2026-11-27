@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% from "_card.html" import card %}
+{% from "_avatar.html" import avatar %}
+{% block title %}{{ u.name if u else 'マイページ' }} - どっち派{% endblock %}
+{% block main %}
+{% if welcome %}<p class="flash ok">ようこそ！ これで投票の記録がアカウントに残ります。</p>{% endif %}
+
+<section class="profile">
+  <div class="pf-top">
+    {% if u %}
+    {{ avatar(u, 64) }}
+    <div class="pf-name">
+      <h1>{{ u.name }}</h1>
+      <p>@{{ u.RowKey }}<span class="pf-grade">{{ u.grade }}</span></p>
+    </div>
+    {% else %}
+    <span class="avatar guest" style="--c: #b9b2a3; --s: 64px">？</span>
+    <div class="pf-name">
+      <h1>ゲスト</h1>
+      <p>この端末の記録だけ見えています</p>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if u and u.bio %}<p class="pf-bio">{{ u.bio }}</p>{% endif %}
+
+  <div class="pf-type{{ ' ready' if typ.ready }}">
+    <span class="pf-type-label">タイプ</span>
+    <b>{{ typ.name if typ.ready else '？？派' }}</b>
+    {% if typ.ready %}<span class="pf-type-sub">少数派率 {{ typ.rate }}% ・ {{ typ.desc }}</span>
+    {% else %}<span class="pf-type-sub">あと{{ typ.need }}問で判定</span>{% endif %}
+  </div>
+
+  <dl class="pf-stats">
+    <div><dt>投票</dt><dd>{{ stats.votes }}</dd></div>
+    <div><dt>つくった</dt><dd>{{ stats.made }}</dd></div>
+    <div><dt>少数派</dt><dd>{{ stats.minor }}</dd></div>
+    <div><dt>寝返り</dt><dd>{{ stats.switched }}</dd></div>
+  </dl>
+
+  {% if own %}
+    {% if u %}
+    <details class="pf-edit">
+      <summary>プロフィールを編集</summary>
+      <form method="post" action="/me/edit">
+        <label class="a-field"><span>表示名</span><input name="name" value="{{ u.name }}" maxlength="10" required></label>
+        <label class="a-field"><span>ひとこと</span><input name="bio" value="{{ u.bio }}" maxlength="60" placeholder="例）目玉焼きはソース派"></label>
+        <div class="a-field"><span>色</span><div class="a-colors">
+          {% for c in colors %}<label><input type="radio" name="color" value="{{ c }}" {{ 'checked' if u.color == c }}><i style="--c: {{ c }}"></i></label>{% endfor %}
+        </div></div>
+        <div class="a-field"><span>学年</span><div class="a-grades">
+          {% for gr in grades %}<label><input type="radio" name="grade" value="{{ gr }}" {{ 'checked' if u.grade == gr }}><i>{{ gr }}</i></label>{% endfor %}
+        </div></div>
+        <button class="a-send small">保存</button>
+      </form>
+      <form method="post" action="/logout" class="pf-logout"><button>ログアウト</button></form>
+    </details>
+    {% else %}
+    <div class="pf-cta">
+      <p>アカウントをつくると、スマホでもPCでも同じ記録が見られます。</p>
+      <div><a class="a-send small" href="/signup">アカウントをつくる</a><a class="pf-login" href="/login">ログイン</a></div>
+    </div>
+    {% endif %}
+  {% endif %}
+</section>
+
+<nav class="tabs">
+  <a href="?tab=made" class="{{ 'on' if tab != 'voted' }}">{{ 'つくった二択' }} {{ made|length }}</a>
+  {% if own %}<a href="?tab=voted" class="{{ 'on' if tab == 'voted' }}">投票した {{ voted|length }}</a>{% endif %}
+</nav>
+
+{% if tab == 'voted' and own %}
+  {% if voted %}<div class="list">{% for q in voted %}{{ card(q) }}{% endfor %}</div>
+  {% else %}<p class="empty">まだ投票していません</p>{% endif %}
+{% else %}
+  {% if made %}
+  <div class="list">
+    {% for q in made %}
+    <div class="mine-wrap">
+      {{ card(q) }}
+      {% if own %}
+      <div class="mine-bar" data-id="{{ q.id }}">
+        <span>削除キー</span>
+        <code class="key" data-key="{{ q.mykey }}">••••</code>
+        <button type="button" class="key-show">見る</button>
+        <button type="button" class="key-del">この二択を消す</button>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty">
+    <p>まだ二択をつくっていません</p>
+    {% if own %}<button type="button" class="make-btn big" data-open="make"><i class="ka">A</i><i class="kb">B</i>つくってみる</button>{% endif %}
+  </div>
+  {% endif %}
+{% endif %}
+{% endblock %}

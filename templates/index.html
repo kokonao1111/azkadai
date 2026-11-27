@@ -1,17 +1,26 @@
 {% extends "base.html" %}
 {% from "_card.html" import card %}
 {% block main %}
-<section class="you">
-  {% if me.ready %}
-  <p class="you-line">あなたは<b>{{ me.name }}</b><span class="you-rate">少数派率 {{ me.rate }}%</span></p>
-  <span class="you-meter" style="--r: {{ me.rate }}%" aria-hidden="true"></span>
-  {% else %}
-  <p class="you-line">
-    何派か判定まで
-    <span class="dots" aria-hidden="true">{% for i in range(3) %}<i class="{{ 'on' if i < 3 - me.need }}"></i>{% endfor %}</span>
-    <span class="you-rate">あと{{ me.need }}問</span>
-  </p>
-  {% endif %}
+<section class="you{{ ' ready' if me.ready }}" aria-label="あなたは何派">
+  <div class="you-top">
+    {% if me.ready %}
+    <p class="you-title">あなたは <b>{{ me.name }}</b></p>
+    <span class="you-badge">少数派率 {{ me.rate }}%</span>
+    {% else %}
+    <p class="you-title">あなたは <b class="q-mark">？？派</b></p>
+    <span class="you-steps" title="3人以上が投票した二択で集計">
+      {% for i in range(3) %}<i class="{{ 'on' if i < me.have }}"></i>{% endfor %}
+      <em>あと{{ me.need }}問</em>
+    </span>
+    {% endif %}
+  </div>
+  <div class="scale" style="--pos: {{ me.rate if me.ready else 50 }}">
+    {% set lo = [0, 15, 35, 55] %}
+    {% for limit, name, desc in types %}
+    <span class="seg{{ ' hit' if me.ready and me.name == name }}">{{ name }}</span>
+    {% endfor %}
+    <span class="pin{{ ' unknown' if not me.ready }}">{{ 'あなた' if me.ready else '？' }}</span>
+  </div>
 </section>
 
 <nav class="tabs">

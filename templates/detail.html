@@ -3,6 +3,12 @@
 {% block title %}{{ q.text }} - どっち派{% endblock %}
 {% block main %}
 <a class="back" href="/">← もどる</a>
+{% if own and made %}
+<div class="made-note">
+  <b>二択を出しました！</b>
+  <p>削除キーは <code>{{ own.key }}</code>。マイページでいつでも確認できます。</p>
+</div>
+{% endif %}
 {{ card(q, link=False) }}
 
 {% if q.mine and not q.closed and not q.switched %}
@@ -41,11 +47,16 @@
 <details class="q-menu">
   <summary>この二択について</summary>
   <div class="q-menu-in">
+    {% if own %}
+    <span class="own-key">あなたの二択・削除キー <code>{{ own.key }}</code></span>
+    <form id="delForm" class="del"><input type="hidden" name="key" value="{{ own.key }}"><button>削除する</button></form>
+    {% else %}
     <button type="button" class="link" id="reportBtn">通報する</button>
     <form id="delForm" class="del">
       <input name="key" inputmode="numeric" placeholder="削除キー" required autocomplete="off">
       <button>削除</button>
     </form>
+    {% endif %}
   </div>
 </details>
 {% endblock %}

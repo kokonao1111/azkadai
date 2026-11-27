@@ -14,6 +14,91 @@
     return f;
   };
 
+  /* ---- スマホ表示に切りかえ ---- */
+  const toPhone = $("#toPhone");
+  if (toPhone) {
+    toPhone.addEventListener("click", () => {
+      localStorage.setItem("dotchi:view", "phone");
+      location.href = "/phone?u=" + encodeURIComponent(location.pathname + location.search);
+    });
+  }
+
+  /* ---- チュートリアル ---- */
+  const TOUR = [
+    { sel: ".card .rope", title: "どっちか、タップするだけ", text: "押すまでみんなの結果は見えません。押した瞬間に綱引きが動いて、少数派か多数派かがわかります。" },
+    { sel: ".card .talk", title: "言い合いに参加", text: "コメントは自分が選んだ側の列に並びます。相手の意見で気が変わったら、1回だけ寝返れます。" },
+    { sel: ".you", title: "あなたは何派？", text: "3問投票すると判定スタート。少数派になった割合で、王道派〜ひねくれ派のどこにいるかが決まります。" },
+    { sel: ".make-btn", title: "二択をつくる", text: "お題とAとBを書くだけ。写真をつければ「どっちの服がいい？」みたいな勝負もできます。" },
+  ];
+
+  const startTour = () => {
+    const steps = TOUR.filter((s) => $(s.sel));
+    if (!steps.length) return;
+    let i = 0;
+    const block = document.createElement("div");
+    block.className = "tour-block";
+    const spot = document.createElement("div");
+    spot.className = "tour-spot";
+    const tip = document.createElement("div");
+    tip.className = "tour-tip";
+    tip.setAttribute("role", "dialog");
+    document.body.append(block, spot, tip);
+
+    const end = () => {
+      localStorage.setItem("dotchi:tour", "done");
+      block.remove(); spot.remove(); tip.remove();
+      window.removeEventListener("resize", place);
+    };
+
+    const place = () => {
+      const step = steps[i];
+      const el = $(step.sel);
+      const r = el.getBoundingClientRect();
+      const pad = 6;
+      Object.assign(spot.style, {
+        top: r.top - pad + "px", left: r.left - pad + "px",
+        width: r.width + pad * 2 + "px", height: r.height + pad * 2 + "px",
+      });
+      const tw = tip.offsetWidth, th = tip.offsetHeight;
+      const below = r.bottom + 14 + th < innerHeight;
+      const top = below ? r.bottom + 14 : Math.max(12, r.top - th - 14);
+      const left = Math.min(Math.max(12, r.left + r.width / 2 - tw / 2), innerWidth - tw - 12);
+      tip.style.top = top + "px";
+      tip.style.left = left + "px";
+    };
+
+    const show = () => {
+      const step = steps[i];
+      const last = i === steps.length - 1;
+      tip.innerHTML = `
+        <span class="tour-step">${i + 1} / ${steps.length}</span>
+        <h3></h3><p></p>
+        <div class="tour-nav">
+          <button type="button" class="tour-skip">スキップ</button>
+          <span class="tour-dots">${steps.map((_, k) => `<i class="${k === i ? "on" : ""}"></i>`).join("")}</span>
+          <button type="button" class="tour-next${last ? " last" : ""}">${last ? "はじめる" : "次へ"}</button>
+        </div>`;
+      $("h3", tip).textContent = step.title;
+      $("p", tip).textContent = step.text;
+      $(".tour-skip", tip).onclick = end;
+      $(".tour-next", tip).onclick = () => (last ? end() : (i++, show()));
+      const el = $(step.sel);
+      const r = el.getBoundingClientRect();
+      if (r.top < 70 || r.bottom > innerHeight - 200) {
+        el.scrollIntoView({ block: "center" });
+      }
+      requestAnimationFrame(place);
+    };
+
+    window.addEventListener("resize", place);
+    show();
+  };
+
+  const wantTour = new URLSearchParams(location.search).has("tour");
+  if ($(".card") && (wantTour || !localStorage.getItem("dotchi:tour"))) {
+    setTimeout(startTour, wantTour ? 300 : 700);
+  }
+
   /* ---- つくる ---- */
   const dlg = $("#make");
   document.addEventListener("click", (e) => {
@@ -30,7 +115,8 @@
 
   const makeForm = $("#makeForm");
   const savedName = localStorage.getItem("dotchi:name");
-  if (savedName) $("input[name=name]", makeForm).value = savedName;
+  const nameIn = $("input[name=name]", makeForm);
+  if (savedName && nameIn) nameIn.value = savedName;
 
   makeForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -38,10 +124,10 @@
     const err = $("#makeErr");
     err.hidden = true;
     btn.disabled = true;
-    localStorage.setItem("dotchi:name", $("input[name=name]", makeForm).value.trim());
+    if (nameIn) localStorage.setItem("dotchi:name", nameIn.value.trim());
     try {
       const d = await post("/new", new FormData(makeForm));
-      location.href = "/q/" + d.id;
+      location.href = "/q/" + d.id + "?made=1";
     } catch (ex) {
       err.textContent = ex.message;
       err.hidden = false;
@@ -140,6 +226,32 @@
       }
     });
   }
+
+  /* ---- マイページ：削除キーを見る・二択を消す ---- */
+  $$(".mine-bar").forEach((bar) => {
+    const code = $(".key", bar);
+    $(".key-show", bar).addEventListener("click", (e) => {
+      const open = code.textContent !== code.dataset.key;
+      code.textContent = open ? code.dataset.key : "••••";
+      e.target.textContent = open ? "かくす" : "見る";
+    });
+    const del = $(".key-del", bar);
+    del.addEventListener("click", async () => {
+      if (!del.dataset.sure) {
+        del.dataset.sure = "1";
+        del.textContent = "本当に消す？";
+        del.classList.add("sure");
+        return;
+      }
+      del.disabled = true;
+      try {
+        await post(`/q/${bar.dataset.id}/delete`, form({ key: code.dataset.key }));
+        bar.closest(".mine-wrap").hidden = true;
+      } catch (ex) {
+        del.textContent = ex.message;
+      }
+    });
+  });
 
   /* ---- 通報・削除 ---- */
   const report = $("#reportBtn");

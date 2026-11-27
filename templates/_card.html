@@ -1,7 +1,7 @@
 {% macro card(q, link=True) %}
 <article class="card{{ ' voted' if q.show }}{{ ' closed' if q.closed }}" data-id="{{ q.id }}" data-mine="{{ q.mine or '' }}" data-a="{{ q.a }}" data-b="{{ q.b }}">
   <div class="card-head">
-    <span class="who">{{ q.name or "名無し" }}</span>
+    {% if q.owner %}<a class="who named" href="/u/{{ q.owner }}">{{ q.name or q.owner }}</a>{% else %}<span class="who">{{ q.name or "名無し" }}</span>{% endif %}
     <span class="left{{ ' soon' if q.left.endswith('分') }}">{{ q.left }}</span>
     <span class="sticker{{ ' hidden' if not q.stance }}">{{ q.stance ~ "！" if q.stance else "" }}</span>
   </div>

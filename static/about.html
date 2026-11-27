@@ -2,57 +2,191 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>あそびかた - どっち派</title>
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/style.css?v=21">
+<link rel="stylesheet" href="/static/style.css?v=31">
+<script>if (window.self !== window.top) document.documentElement.classList.add("in-frame");</script>
 </head>
-<body>
+<body class="guide">
 <header class="top">
   <div class="top-in">
-    <a class="logo" href="/"><img src="/static/favicon.svg" alt="" width="30" height="30"><span><b class="la">どっ</b><b class="lb">ち</b>派</span></a>
+    <a class="logo" href="/"><img src="/static/favicon.svg" alt="" width="24" height="24"><span><b class="la">どっ</b><b class="lb">ち</b>派</span></a>
+    <nav class="top-nav"><a href="/" class="login-link">二択を見る →</a></nav>
   </div>
 </header>
-<main class="wrap doc">
-  <h1>あそびかた</h1>
-  <p class="lead">ここに出てくる話題は、ぜんぶ二択です。</p>
 
-  <h2>投票する</h2>
-  <ol>
-    <li>どっちか好きなほうをタップ</li>
-    <li>タップするまで、みんなの結果は見えません</li>
-    <li>結果が出たら「言い合い」へ。コメントは自分が選んだ側の列に並びます</li>
-    <li>話を聞いて気が変わったら、1回だけ反対側に寝返れます</li>
-  </ol>
+<main class="wrap">
+  <!-- 1. ためしに押してみる -->
+  <section class="g-hero">
+    <p class="g-kicker">あそびかた</p>
+    <h1>ぜんぶ、二択。</h1>
+    <p class="g-lead">読むだけの掲示板はもうおしまい。<br>どっちか押せば、もう参加してる。</p>
 
-  <h2>二択をつくる</h2>
-  <ul>
-    <li>右上の「つくる」から。お題と、AとBを書くだけ</li>
-    <li>AとBに写真をつけると「どっちの服がいい？」みたいな勝負もできます</li>
-    <li>締切は1時間・今日中・3日間から選べます。締め切ると「結果発表」に移ります</li>
-  </ul>
+    <article class="card demo" id="demo1">
+      <div class="card-head"><span class="who">ためしに押してみて</span><span class="sticker hidden"></span></div>
+      <h2 class="q">朝ごはん、どっち派？</h2>
+      <div class="rope" style="--pa: 50">
+        <button type="button" class="side sa" data-side="a"><span class="opt">ごはん</span><span class="pct"></span></button>
+        <span class="vs" aria-hidden="true">VS</span>
+        <button type="button" class="side sb" data-side="b"><span class="opt">パン</span><span class="pct"></span></button>
+      </div>
+      <div class="card-foot"><span class="count"><b class="total">37</b>人</span><span class="g-hint" id="hint1">↑ 押すまで結果は見えない</span></div>
+    </article>
+  </section>
 
-  <h2>あなたは何派？</h2>
-  <p>3人以上が投票した二択に3問答えると、少数派になった割合からタイプが決まります。</p>
-  <dl class="types">
-    <dt>王道派</dt><dd>少数派率 15%未満</dd>
-    <dt>バランス派</dt><dd>15〜35%</dd>
-    <dt>気まぐれ派</dt><dd>35〜55%</dd>
-    <dt>ひねくれ派</dt><dd>55%以上</dd>
-  </dl>
+  <!-- 2. 4ステップ -->
+  <section class="g-sec">
+    <h2 class="g-h">4ステップで遊べる</h2>
+    <ol class="g-steps">
+      <li>
+        <span class="g-num">1</span>
+        <div class="g-body">
+          <h3>えらぶ</h3>
+          <p>好きなほうをタップ。文字は書かなくていい。</p>
+          <div class="mini-rope"><span class="ma">きのこ</span><span class="mb">たけのこ</span><i class="tap"></i></div>
+        </div>
+      </li>
+      <li>
+        <span class="g-num">2</span>
+        <div class="g-body">
+          <h3>結果を見る</h3>
+          <p>押した瞬間にVSが動いて、自分が少数派か多数派かわかる。</p>
+          <div class="mini-rope result"><span class="ma on">きのこ 38%</span><span class="mb">たけのこ 62%</span><em class="mini-sticker">少数派！</em></div>
+        </div>
+      </li>
+      <li>
+        <span class="g-num">3</span>
+        <div class="g-body">
+          <h3>言い合う</h3>
+          <p>コメントは自分が選んだ側の列に入る。左と右で言い合いになる。</p>
+          <div class="mini-debate">
+            <div><b class="a">きのこ派</b><i class="ba">持つところがある</i><i class="ba">チョコ多め</i></div>
+            <div><b class="b">たけのこ派</b><i class="bb">クッキーが本体</i></div>
+          </div>
+        </div>
+      </li>
+      <li>
+        <span class="g-num">4</span>
+        <div class="g-body">
+          <h3>寝返る</h3>
+          <p>相手の意見に負けたら、1回だけ反対側に移れる。何人寝返ったかも出る。</p>
+          <div class="mini-turn"><span class="ma">きのこ</span><span class="arrow">→</span><span class="mb">たけのこ</span><em>寝返り 3人</em></div>
+        </div>
+      </li>
+    </ol>
+  </section>
 
-  <h2>ルール</h2>
-  <ul>
-    <li>登録はいりません。名前も書かなくていいです</li>
-    <li>電話番号・メールアドレス・LINE ID・住所は書けません</li>
-    <li>悪口は書けません。3人が通報すると表示されなくなります</li>
-    <li>写真の位置情報は、アップロードしたときに消しています</li>
-  </ul>
+  <!-- 3. タブ -->
+  <section class="g-sec">
+    <h2 class="g-h">タブの見かた</h2>
+    <div class="g-tabs">
+      <div><b>新着</b><span>新しく出た二択</span></div>
+      <div><b>白熱</b><span>50:50に近くて、票が多い順</span></div>
+      <div><b>締切まぢか</b><span>もうすぐ締め切られる順</span></div>
+      <div><b>結果発表</b><span>締め切った二択。「◯◯派の勝ち」「大接戦」が出る</span></div>
+    </div>
+  </section>
 
-  <a class="back" href="/" style="margin-top:28px">← 二択を見にいく</a>
+  <!-- 4. 何派か診断 -->
+  <section class="g-sec">
+    <h2 class="g-h">あなたは何派？</h2>
+    <p class="g-p">3人以上が投票した二択に3問答えると判定がはじまります。少数派になった割合で、メーターのどこにいるかが決まります。下のつまみを動かしてみてください。</p>
+    <div class="you ready g-you">
+      <div class="you-top">
+        <p class="you-title">少数派率 <b id="rateOut">40%</b></p>
+        <span class="you-badge" id="typeOut">気まぐれ派</span>
+      </div>
+      <div class="scale" id="demoScale" style="--pos: 40">
+        <span class="seg">王道派</span><span class="seg">バランス派</span><span class="seg hit">気まぐれ派</span><span class="seg">ひねくれ派</span>
+        <span class="pin">あなた</span>
+      </div>
+      <input type="range" min="0" max="100" value="40" id="rateIn" aria-label="少数派率をうごかしてみる">
+      <p class="g-small" id="descOut">読めない。そのときの気分で選んでる</p>
+    </div>
+  </section>
+
+  <!-- 5. つくりかた -->
+  <section class="g-sec">
+    <h2 class="g-h">二択のつくりかた</h2>
+    <div class="g-make">
+      <div class="gm-q"><span>お題</span>修学旅行いくなら？<em>40字まで</em></div>
+      <div class="gm-ab">
+        <div class="gm-a"><span>A</span>沖縄<em>写真もつけられる</em></div>
+        <div class="gm-b"><span>B</span>北海道<em>16字まで</em></div>
+      </div>
+      <div class="gm-dur"><i>1時間</i><i class="on">今日中</i><i>3日間</i><em>← 締切をえらぶ</em></div>
+    </div>
+    <p class="g-p">削除キーを空にしておくと自動で決まります。マイページでいつでも確認・削除できます。</p>
+  </section>
+
+  <!-- 6. アカウント -->
+  <section class="g-sec">
+    <h2 class="g-h">アカウント</h2>
+    <div class="g-acc">
+      <div><b>なしでも遊べる</b><span>投票もコメントも登録なしでOK。記録はその端末に残ります。</span></div>
+      <div><b>登録すると</b><span>スマホとPCで同じ記録。プロフィール、つくった二択の一覧、タイプが見られます。メールアドレスはいりません。</span></div>
+    </div>
+  </section>
+
+  <!-- 7. ルール -->
+  <section class="g-sec">
+    <h2 class="g-h">安心して使うために</h2>
+    <ul class="g-rules">
+      <li><i>☎</i>電話番号・メール・LINE ID・住所は、書こうとしても投稿できません</li>
+      <li><i>✕</i>悪口は投稿できません。3人が通報すると表示されなくなります</li>
+      <li><i>⌖</i>写真の位置情報（GPS）は、アップロードしたときに消しています</li>
+      <li><i>@</i>本名がわかるIDや表示名にしないでね</li>
+    </ul>
+  </section>
+
+  <div class="g-end">
+    <a class="a-send" href="/?tour=1">チュートリアルをもう一度見る</a>
+    <a class="g-back" href="/">二択を見にいく →</a>
+  </div>
 </main>
+
+<script>
+  // ためしに押す
+  (function () {
+    const card = document.getElementById("demo1");
+    const result = { a: 41, b: 59 };
+    card.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-side]");
+      if (!btn || card.classList.contains("voted")) return;
+      const side = btn.dataset.side;
+      card.classList.add("voted", "pop");
+      card.querySelector(".rope").style.setProperty("--pa", result.a);
+      card.querySelector(".sa .pct").innerHTML = result.a + "<small>%</small>";
+      card.querySelector(".sb .pct").innerHTML = result.b + "<small>%</small>";
+      card.querySelector(side === "a" ? ".sa" : ".sb").classList.add("me");
+      const st = card.querySelector(".sticker");
+      st.textContent = side === "a" ? "少数派！" : "多数派！";
+      st.classList.toggle("hidden", false);
+      card.querySelector(".total").textContent = 38;
+      document.getElementById("hint1").textContent = side === "a" ? "少数派でした。言い合いで仲間をふやそう" : "多数派でした。少数派の言い分も聞いてみて";
+    });
+  })();
+
+  // メーター
+  (function () {
+    const types = [[15, "王道派", "だいたいみんなと同じ"], [35, "バランス派", "ときどき少数派"], [55, "気まぐれ派", "読めない。そのときの気分で選んでる"], [101, "ひねくれ派", "みんなと逆にいきがち"]];
+    const input = document.getElementById("rateIn");
+    const scale = document.getElementById("demoScale");
+    const segs = scale.querySelectorAll(".seg");
+    input.addEventListener("input", () => {
+      const r = +input.value;
+      const idx = types.findIndex((t) => r < t[0]);
+      scale.style.setProperty("--pos", r);
+      segs.forEach((s, i) => s.classList.toggle("hit", i === idx));
+      document.getElementById("rateOut").textContent = r + "%";
+      document.getElementById("typeOut").textContent = types[idx][1];
+      document.getElementById("descOut").textContent = types[idx][2];
+    });
+  })();
+</script>
 </body>
 </html>

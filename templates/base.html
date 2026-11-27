@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{% block title %}どっち派{% endblock %}</title>
 <meta name="description" content="ぜんぶ二択の掲示板。タップ1回で参加できる。">
 <meta name="theme-color" content="#f3efe6">
@@ -10,9 +10,18 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=20">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=30">
+<script>
+  // スマホ表示にしている人は、PCで開いたらスマホ枠のページへ
+  (function () {
+    if (window.self !== window.top) document.documentElement.classList.add("in-frame");
+    else if (localStorage.getItem("dotchi:view") === "phone" && window.innerWidth >= 760)
+      location.replace("/phone?u=" + encodeURIComponent(location.pathname + location.search));
+  })();
+</script>
 </head>
 <body>
+{% from "_avatar.html" import avatar %}
 <header class="top">
   <div class="top-in">
     <a class="logo" href="/">
@@ -20,8 +29,17 @@
       <span><b class="la">どっ</b><b class="lb">ち</b>派</span>
     </a>
     <nav class="top-nav">
-      <a href="/about">あそびかた</a>
-      <button type="button" class="make-btn" data-open="make"><i class="ka">A</i><i class="kb">B</i>つくる</button>
+      <button type="button" class="view-btn" id="toPhone" title="スマホの画面で見る">
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><rect x="3.5" y="1" width="9" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M7 12.5h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        スマホ表示
+      </button>
+      <a href="/about" class="help-link">あそびかた</a>
+      <button type="button" class="make-btn top-make" data-open="make"><i class="ka">A</i><i class="kb">B</i>つくる</button>
+      {% if me_user %}
+      <a href="/me" class="me-link" aria-label="マイページ">{{ avatar(me_user, 32) }}</a>
+      {% else %}
+      <a href="/login" class="login-link">ログイン</a>
+      {% endif %}
     </nav>
   </div>
 </header>
@@ -30,6 +48,24 @@
   {% if request.args.get('e') %}<p class="flash">{{ request.args.get('e') }}</p>{% endif %}
   {% block main %}{% endblock %}
 </main>
+
+<!-- スマホ用の下のタブ -->
+<nav class="bottom-nav" aria-label="メニュー">
+  <a href="/" class="{{ 'on' if request.endpoint == 'index' }}">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5V20h-5v-5h-6v5H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+    <span>ホーム</span>
+  </a>
+  <button type="button" data-open="make" class="bn-make">
+    <i class="ka">A</i><i class="kb">B</i>
+    <span>つくる</span>
+  </button>
+  <a href="/me" class="{{ 'on' if request.endpoint in ('me', 'signup', 'login') }}">
+    {% if me_user %}{{ avatar(me_user, 24) }}{% else %}
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 20c1.2-3.5 4-5 7-5s5.8 1.5 7 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    {% endif %}
+    <span>マイページ</span>
+  </a>
+</nav>
 
 <dialog class="make" id="make" aria-labelledby="makeTitle">
   <form id="makeForm" action="/new" method="post" enctype="multipart/form-data">
@@ -61,13 +97,17 @@
       {% endfor %}
     </fieldset>
     <div class="m-row">
+      {% if me_user %}
+      <label class="m-as">{{ avatar(me_user, 22) }}<span>{{ me_user.name }}として出す</span><input type="checkbox" name="anon" value="1"><em>名前をかくす</em></label>
+      {% else %}
       <input name="name" maxlength="10" placeholder="名前（なしでOK）" autocomplete="nickname" aria-label="名前">
-      <input name="key" maxlength="20" inputmode="numeric" placeholder="削除キー" autocomplete="off" aria-label="削除キー">
+      {% endif %}
+      <input name="key" maxlength="20" inputmode="numeric" placeholder="削除キー（空なら自動）" autocomplete="off" aria-label="削除キー">
     </div>
     <button class="m-send" type="submit">出す</button>
   </form>
 </dialog>
 
-<script src="{{ url_for('static', filename='app.js') }}?v=20" defer></script>
+<script src="{{ url_for('static', filename='app.js') }}?v=30" defer></script>
 </body>
 </html>

@@ -167,7 +167,7 @@ class LocalImages:
                 os.remove(p)
 
     def asset(self, name):
-        return None
+        return "/static/favicon.svg" if name.endswith("mark.svg") else None
 
 
 class Store:
@@ -186,3 +186,5 @@ class Store:
         self.questions = make("questions")
         self.votes = make("votes")
         self.comments = make("comments")
+        self.users = make("users")
+        self.mine = make("mine")  # 自分がつくった二択と削除キー

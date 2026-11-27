@@ -1,0 +1,1 @@
+{% macro avatar(u, size=36) %}<span class="avatar" style="--c: {{ u.color or '#1c1b19' }}; --s: {{ size }}px">{{ (u.name or '？')[:1] }}</span>{% endmacro %}

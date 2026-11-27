@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}{{ 'アカウント登録' if mode == 'signup' else 'ログイン' }} - どっち派{% endblock %}
+{% block main %}
+<div class="auth">
+  <div class="auth-card">
+    <div class="auth-switch">
+      <a href="/signup" class="{{ 'on' if mode == 'signup' }}">はじめて</a>
+      <a href="/login" class="{{ 'on' if mode == 'login' }}">ログイン</a>
+    </div>
+
+    {% if mode == 'signup' %}
+    <h1>アカウントをつくる</h1>
+    <p class="auth-lead">登録すると、投票の記録とつくった二択がどの端末でも見られます。メールアドレスはいりません。</p>
+    {% else %}
+    <h1>おかえり</h1>
+    <p class="auth-lead">IDとパスワードでログイン。</p>
+    {% endif %}
+
+    {% if err %}<p class="err">{{ err }}</p>{% endif %}
+
+    <form method="post" class="auth-form" id="authForm">
+      <label class="a-field">
+        <span>ID</span>
+        <div class="a-at"><i>@</i><input name="uid" value="{{ f.get('uid', '') }}" maxlength="15" autocomplete="username" autocapitalize="off" spellcheck="false" required placeholder="tanaka_01"></div>
+        {% if mode == 'signup' %}<small>半角の英小文字・数字・_ で3〜15文字</small>{% endif %}
+      </label>
+
+      {% if mode == 'signup' %}
+      <label class="a-field">
+        <span>表示名</span>
+        <input name="name" value="{{ f.get('name', '') }}" maxlength="10" required placeholder="たなか" id="nameIn">
+      </label>
+
+      <div class="a-field">
+        <span>アイコンの色</span>
+        <div class="a-colors">
+          {% for c in colors %}
+          <label><input type="radio" name="color" value="{{ c }}" {{ 'checked' if (f.get('color') or colors[0]) == c }}><i style="--c: {{ c }}"><b class="a-initial">？</b></i></label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="a-field">
+        <span>学年</span>
+        <div class="a-grades">
+          {% for gr in grades %}
+          <label><input type="radio" name="grade" value="{{ gr }}" {{ 'checked' if (f.get('grade') or 'ひみつ') == gr }}><i>{{ gr }}</i></label>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <label class="a-field">
+        <span>パスワード</span>
+        <input name="pw" type="password" minlength="6" required autocomplete="{{ 'new-password' if mode == 'signup' else 'current-password' }}" placeholder="6文字以上">
+      </label>
+
+      <button class="a-send">{{ '登録してはじめる' if mode == 'signup' else 'ログイン' }}</button>
+    </form>
+    {% if mode == 'signup' %}
+    <p class="auth-note">名前・学校名など、本名がわかるものはIDにしないでね。</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
