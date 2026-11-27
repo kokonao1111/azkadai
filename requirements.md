@@ -193,7 +193,8 @@ Azure App Service（Linux / Free F1 / Python 3.12）
 GitHub の main に push → GitHub Actions → App Service へデプロイ
 ```
 
-学生サブスクリプションでは日本のリージョンが使えなかったので、Korea Central に作った。
+学生サブスクリプションでは日本のリージョンが使えなかったので、App Service は East Asia（香港）、Storage は Korea Central に作った。
+App Service の無料プランは1日に使えるCPU時間が短いので、ライブラリのインストールはGitHub Actions側で済ませてから送っている。
 
 ## 10. 課題との対応
 
