@@ -3,56 +3,56 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>使い方 - きょうだけ</title>
+<title>あそびかた - どっち派</title>
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/static/style.css?v=10">
-<style>
-  .doc h1 { font-size: 22px; margin: 28px 0 4px; }
-  .doc .lead { margin: 0 0 24px; color: var(--muted); }
-  .doc h2 { font-size: 15px; margin: 28px 0 8px; }
-  .doc ul { margin: 0; padding-left: 1.2em; }
-  .doc li + li { margin-top: 4px; }
-  .doc dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; }
-  .doc dt { font-size: 13px; }
-  .doc dd { margin: 0; color: var(--muted); }
-  .doc .back { display: inline-block; margin-top: 32px; color: var(--accent); font-weight: 700; text-decoration: none; }
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css?v=20">
 </head>
 <body>
 <header class="top">
   <div class="top-in">
-    <a class="logo" href="/"><img src="/static/favicon.svg" alt="" width="26" height="26">きょうだけ</a>
+    <a class="logo" href="/"><img src="/static/favicon.svg" alt="" width="30" height="30"><span><b class="la">どっ</b><b class="lb">ち</b>派</span></a>
   </div>
 </header>
-
 <main class="wrap doc">
-  <h1>使い方</h1>
-  <p class="lead">書いたことは、あしたの朝5時に全部消えます。</p>
+  <h1>あそびかた</h1>
+  <p class="lead">ここに出てくる話題は、ぜんぶ二択です。</p>
 
-  <h2>できること</h2>
+  <h2>投票する</h2>
+  <ol>
+    <li>どっちか好きなほうをタップ</li>
+    <li>タップするまで、みんなの結果は見えません</li>
+    <li>結果が出たら「言い合い」へ。コメントは自分が選んだ側の列に並びます</li>
+    <li>話を聞いて気が変わったら、1回だけ反対側に寝返れます</li>
+  </ol>
+
+  <h2>二択をつくる</h2>
   <ul>
-    <li>名前なしで投稿できます（140文字まで）</li>
-    <li>写真を1枚つけられます</li>
-    <li>「わかる」と返信ができます</li>
-    <li>削除キーを決めておくと、自分の投稿をあとで消せます</li>
+    <li>右上の「つくる」から。お題と、AとBを書くだけ</li>
+    <li>AとBに写真をつけると「どっちの服がいい？」みたいな勝負もできます</li>
+    <li>締切は1時間・今日中・3日間から選べます。締め切ると「結果発表」に移ります</li>
   </ul>
 
-  <h2>タグ</h2>
-  <dl>
-    <dt>雑談</dt><dd>なんでも</dd>
-    <dt>質問</dt><dd>課題の範囲、テストの日など</dd>
-    <dt>いま</dt><dd>電車が遅れてる、購買のパンが売り切れ、など今だけの情報</dd>
-    <dt>おしらせ</dt><dd>部活の試合、文化祭、ライブなど</dd>
+  <h2>あなたは何派？</h2>
+  <p>3人以上が投票した二択に3問答えると、少数派になった割合からタイプが決まります。</p>
+  <dl class="types">
+    <dt>王道派</dt><dd>少数派率 15%未満</dd>
+    <dt>バランス派</dt><dd>15〜35%</dd>
+    <dt>気まぐれ派</dt><dd>35〜55%</dd>
+    <dt>ひねくれ派</dt><dd>55%以上</dd>
   </dl>
 
   <h2>ルール</h2>
   <ul>
-    <li>電話番号・メールアドレス・LINE ID・住所は投稿できません</li>
-    <li>悪口は投稿できません。3人が通報すると表示されなくなります</li>
-    <li>写真の位置情報は投稿するときに自動で削除されます</li>
+    <li>登録はいりません。名前も書かなくていいです</li>
+    <li>電話番号・メールアドレス・LINE ID・住所は書けません</li>
+    <li>悪口は書けません。3人が通報すると表示されなくなります</li>
+    <li>写真の位置情報は、アップロードしたときに消しています</li>
   </ul>
 
-  <a class="back" href="/">← もどる</a>
+  <a class="back" href="/" style="margin-top:28px">← 二択を見にいく</a>
 </main>
 </body>
 </html>

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% from "_card.html" import card %}
+{% block title %}{{ q.text }} - どっち派{% endblock %}
+{% block main %}
+<a class="back" href="/">← もどる</a>
+{{ card(q, link=False) }}
+
+{% if q.mine and not q.closed and not q.switched %}
+<p class="turn"><button type="button" class="turn-btn" data-side="{{ 'b' if q.mine == 'a' else 'a' }}">{{ q.b if q.mine == 'a' else q.a }}に寝返る</button><span>（1回だけ）</span></p>
+{% elif q.switched %}
+<p class="turn">寝返りました</p>
+{% endif %}
+
+<section class="debate" data-id="{{ q.id }}">
+  <div class="col ca">
+    <h3>{{ q.a }}派 <span>{{ side.a|length }}</span></h3>
+    <ul>
+      {% for c in side.a %}<li>{{ c.body }}</li>{% endfor %}
+    </ul>
+  </div>
+  <div class="col cb">
+    <h3>{{ q.b }}派 <span>{{ side.b|length }}</span></h3>
+    <ul>
+      {% for c in side.b %}<li>{{ c.body }}</li>{% endfor %}
+    </ul>
+  </div>
+</section>
+
+{% if not q.closed %}
+<form class="say{{ ' locked' if not q.mine }} say-{{ q.mine or 'none' }}" id="say">
+  <p class="err" id="sayErr" hidden></p>
+  <div class="say-row">
+    <input name="body" maxlength="60" autocomplete="off" required
+      placeholder="{{ (q.a if q.mine == 'a' else q.b) ~ '派として言う' if q.mine else '投票すると書けます' }}"
+      {{ 'disabled' if not q.mine }}>
+    <button {{ 'disabled' if not q.mine }}>言う</button>
+  </div>
+</form>
+{% endif %}
+
+<details class="q-menu">
+  <summary>この二択について</summary>
+  <div class="q-menu-in">
+    <button type="button" class="link" id="reportBtn">通報する</button>
+    <form id="delForm" class="del">
+      <input name="key" inputmode="numeric" placeholder="削除キー" required autocomplete="off">
+      <button>削除</button>
+    </form>
+  </div>
+</details>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% macro card(q, link=True) %}
+<article class="card{{ ' voted' if q.show }}{{ ' closed' if q.closed }}" data-id="{{ q.id }}" data-mine="{{ q.mine or '' }}" data-a="{{ q.a }}" data-b="{{ q.b }}">
+  <div class="card-head">
+    <span class="who">{{ q.name or "名無し" }}</span>
+    <span class="left{{ ' soon' if q.left.endswith('分') }}">{{ q.left }}</span>
+    <span class="sticker{{ ' hidden' if not q.stance }}">{{ q.stance ~ "！" if q.stance else "" }}</span>
+  </div>
+  {% if link %}
+  <h2 class="q"><a href="/q/{{ q.id }}">{{ q.text }}</a></h2>
+  {% else %}
+  <h1 class="q">{{ q.text }}</h1>
+  {% endif %}
+
+  {% if q.img_a or q.img_b %}
+  <div class="pics">
+    {% for s in ['a', 'b'] %}
+    {% set img = q['img_' ~ s] %}
+    <button type="button" class="pic p{{ s }}" data-side="{{ s }}" {{ 'disabled' if q.closed }} aria-label="{{ q[s] }}に投票">
+      {% if img %}<img src="{{ img }}" alt="" loading="lazy">{% else %}<span>写真なし</span>{% endif %}
+    </button>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="rope" style="--pa: {{ q.pa if q.show else 50 }}">
+    <button type="button" class="side sa{{ ' me' if q.mine == 'a' }}" data-side="a" {{ 'disabled' if q.closed }}>
+      <span class="opt">{{ q.a }}</span>
+      <span class="pct">{% if q.show %}{{ q.pa }}<small>%</small>{% endif %}</span>
+    </button>
+    <span class="vs" aria-hidden="true">VS</span>
+    <button type="button" class="side sb{{ ' me' if q.mine == 'b' }}" data-side="b" {{ 'disabled' if q.closed }}>
+      <span class="opt">{{ q.b }}</span>
+      <span class="pct">{% if q.show %}{{ q.pb }}<small>%</small>{% endif %}</span>
+    </button>
+  </div>
+
+  <div class="card-foot">
+    <span class="count"><b class="total">{{ q.total }}</b>人</span>
+    {% if q.switches %}<span>寝返り{{ q.switches }}人</span>{% endif %}
+    {% if q.closed %}<span class="verdict">{{ q.verdict }}</span>{% endif %}
+    {% if link %}<a class="talk" href="/q/{{ q.id }}">言い合い {{ q.ncom or 0 }}</a>{% endif %}
+  </div>
+</article>
+{% endmacro %}

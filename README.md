@@ -1,8 +1,8 @@
-# きょうだけ
+# どっち派
 
-書いたことは、あしたの朝5時に全部消える。高校生のための掲示板。
+投稿がぜんぶ「AかBか」の二択になっている、高校生向けの掲示板。
 
-https://kyoudake.azurewebsites.net/
+https://dotchiha.azurewebsites.net/
 
 - 要件定義：[requirements.md](requirements.md)
 - Flask / Azure App Service / Table Storage / Blob Storage
@@ -16,4 +16,4 @@ python -m venv .venv
 .venv/bin/python app.py
 ```
 
-`AZURE_STORAGE_CONNECTION_STRING` を設定していないときは `data/` に保存される。
+`AZURE_STORAGE_CONNECTION_STRING` がないときは `data/` に保存される。

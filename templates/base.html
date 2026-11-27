@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}どっち派{% endblock %}</title>
+<meta name="description" content="ぜんぶ二択の掲示板。タップ1回で参加できる。">
+<meta name="theme-color" content="#f3efe6">
+<link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=20">
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <a class="logo" href="/">
+      {% if logo %}<img src="{{ logo }}" alt="" width="30" height="30">{% endif %}
+      <span><b class="la">どっ</b><b class="lb">ち</b>派</span>
+    </a>
+    <nav class="top-nav">
+      <a href="/about">あそびかた</a>
+      <button type="button" class="make-btn" data-open="make">つくる</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  {% if request.args.get('e') %}<p class="flash">{{ request.args.get('e') }}</p>{% endif %}
+  {% block main %}{% endblock %}
+</main>
+
+<dialog class="make" id="make" aria-labelledby="makeTitle">
+  <form id="makeForm" action="/new" method="post" enctype="multipart/form-data">
+    <div class="make-head">
+      <h2 id="makeTitle">二択をつくる</h2>
+      <button type="button" class="x" data-close aria-label="とじる">×</button>
+    </div>
+    <p class="err" id="makeErr" hidden></p>
+    <label class="m-field">
+      <span>お題</span>
+      <input name="text" maxlength="40" required placeholder="例）修学旅行いくなら？" autocomplete="off">
+    </label>
+    <div class="m-opts">
+      <label class="m-opt oa">
+        <span>A</span>
+        <input name="a" maxlength="16" required placeholder="沖縄" autocomplete="off">
+        <span class="m-pic"><input type="file" name="img_a" accept="image/jpeg,image/png,image/webp"><i>写真</i></span>
+      </label>
+      <label class="m-opt ob">
+        <span>B</span>
+        <input name="b" maxlength="16" required placeholder="北海道" autocomplete="off">
+        <span class="m-pic"><input type="file" name="img_b" accept="image/jpeg,image/png,image/webp"><i>写真</i></span>
+      </label>
+    </div>
+    <fieldset class="m-dur">
+      <legend>締切</legend>
+      {% for k, label in durations.items() %}
+      <label><input type="radio" name="dur" value="{{ k }}" {{ 'checked' if k == 'today' }}><span>{{ label }}</span></label>
+      {% endfor %}
+    </fieldset>
+    <div class="m-row">
+      <input name="name" maxlength="10" placeholder="名前（なしでOK）" autocomplete="nickname" aria-label="名前">
+      <input name="key" maxlength="20" inputmode="numeric" placeholder="削除キー" autocomplete="off" aria-label="削除キー">
+    </div>
+    <button class="m-send" type="submit">出す</button>
+  </form>
+</dialog>
+
+<script src="{{ url_for('static', filename='app.js') }}?v=20" defer></script>
+</body>
+</html>

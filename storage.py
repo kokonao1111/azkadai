@@ -1,7 +1,7 @@
-"""投稿と画像の保存先。
+"""データの保存先。
 
-AZURE_STORAGE_CONNECTION_STRING が設定されていれば Table Storage / Blob Storage を使う。
-設定されていなければ手元の data/ フォルダに保存する（ローカル開発用）。
+AZURE_STORAGE_CONNECTION_STRING があれば Table Storage / Blob Storage、
+なければ data/ フォルダの JSON に保存する（手元で動かす用）。
 """
 import json
 import os
@@ -9,106 +9,91 @@ import threading
 import uuid
 
 CONN = os.environ.get("AZURE_STORAGE_CONNECTION_STRING", "")
-TABLE_NAME = os.environ.get("POSTS_TABLE", "posts")
+PREFIX = os.environ.get("TABLE_PREFIX", "dotchi")
 CONTAINER = os.environ.get("IMAGE_CONTAINER", "images")
 
 
-class AzureStore:
-    def __init__(self, conn):
-        from azure.data.tables import TableServiceClient
-        from azure.storage.blob import BlobServiceClient
+class AzureTable:
+    def __init__(self, service, name):
+        self.t = service.create_table_if_not_exists(name)
 
-        self._tables = TableServiceClient.from_connection_string(conn)
-        self.table = self._tables.create_table_if_not_exists(TABLE_NAME)
-        self._blobs = BlobServiceClient.from_connection_string(conn)
-        self.container = self._blobs.get_container_client(CONTAINER)
-        if not self.container.exists():
-            self.container.create_container(public_access="blob")
+    def query(self, pk):
+        return [dict(e) for e in self.t.query_entities("PartitionKey eq @pk", parameters={"pk": pk})]
 
-    def list_day(self, day):
-        rows = self.table.query_entities(
-            "PartitionKey eq @pk", parameters={"pk": day}
-        )
-        return [dict(r) for r in rows]
-
-    def count_day(self, day):
-        rows = self.table.query_entities(
-            "PartitionKey eq @pk", parameters={"pk": day}, select=["RowKey"]
-        )
-        return sum(1 for _ in rows)
-
-    def get(self, day, row):
+    def get(self, pk, rk):
         from azure.core.exceptions import ResourceNotFoundError
 
         try:
-            return dict(self.table.get_entity(day, row))
+            return dict(self.t.get_entity(pk, rk))
         except ResourceNotFoundError:
             return None
 
-    def insert(self, entity):
-        self.table.create_entity(entity)
+    def insert(self, e):
+        self.t.create_entity(e)
 
-    def bump(self, day, row, field, amount=1):
-        """楽観ロックで数値を増やす。同時に押されても数え漏れしにくくする。"""
+    def upsert(self, e):
+        from azure.data.tables import UpdateMode
+
+        self.t.upsert_entity(e, mode=UpdateMode.MERGE)
+
+    def bump(self, pk, rk, deltas):
+        """数値をまとめて増減する。ETag で同時更新をはじいてやり直す。"""
         from azure.core import MatchConditions
         from azure.core.exceptions import ResourceModifiedError, ResourceNotFoundError
         from azure.data.tables import UpdateMode
 
-        for _ in range(5):
+        for _ in range(6):
             try:
-                ent = self.table.get_entity(day, row)
+                e = self.t.get_entity(pk, rk)
             except ResourceNotFoundError:
                 return None
-            ent[field] = int(ent.get(field, 0)) + amount
+            for k, v in deltas.items():
+                e[k] = max(0, int(e.get(k, 0)) + v)
             try:
-                self.table.update_entity(
-                    ent,
-                    mode=UpdateMode.MERGE,
-                    etag=ent.metadata["etag"],
+                self.t.update_entity(
+                    e, mode=UpdateMode.MERGE, etag=e.metadata["etag"],
                     match_condition=MatchConditions.IfNotModified,
                 )
-                return dict(ent)
+                return dict(e)
             except ResourceModifiedError:
                 continue
         return None
 
-    def delete(self, day, row):
-        self.table.delete_entity(day, row)
+    def delete(self, pk, rk):
+        self.t.delete_entity(pk, rk)
 
-    def put_image(self, data, content_type="image/jpeg"):
+
+class AzureImages:
+    def __init__(self, conn):
+        from azure.storage.blob import BlobServiceClient
+
+        self.c = BlobServiceClient.from_connection_string(conn).get_container_client(CONTAINER)
+        if not self.c.exists():
+            self.c.create_container(public_access="blob")
+
+    def put(self, data):
         from azure.storage.blob import ContentSettings
 
-        name = f"posts/{uuid.uuid4().hex}.jpg"
-        self.container.upload_blob(
-            name,
-            data,
-            overwrite=True,
-            content_settings=ContentSettings(
-                content_type=content_type, cache_control="public, max-age=604800"
-            ),
-        )
-        return self.container.get_blob_client(name).url
+        name = f"dotchi/{uuid.uuid4().hex}.jpg"
+        self.c.upload_blob(name, data, overwrite=True, content_settings=ContentSettings(
+            content_type="image/jpeg", cache_control="public, max-age=604800"))
+        return self.c.get_blob_client(name).url
 
-    def delete_image(self, url):
-        prefix = self.container.url.rstrip("/") + "/"
+    def delete(self, url):
+        prefix = self.c.url.rstrip("/") + "/"
         if url and url.startswith(prefix):
             try:
-                self.container.delete_blob(url[len(prefix):])
+                self.c.delete_blob(url[len(prefix):])
             except Exception:
                 pass
 
-    def asset_url(self, name):
-        return self.container.get_blob_client(name).url
+    def asset(self, name):
+        return self.c.get_blob_client(name).url
 
 
-class LocalStore:
-    """Azure なしで動かすときの代わり。JSON ファイル 1 個に全部入れる。"""
-
-    def __init__(self, root):
-        self.root = root
-        self.file = os.path.join(root, "posts.json")
-        self.img_dir = os.path.join(root, "images")
-        os.makedirs(self.img_dir, exist_ok=True)
+class LocalTable:
+    def __init__(self, root, name):
+        self.file = os.path.join(root, f"{name}.json")
         self.lock = threading.Lock()
         if not os.path.exists(self.file):
             self._save([])
@@ -121,61 +106,83 @@ class LocalStore:
         with open(self.file, "w", encoding="utf-8") as f:
             json.dump(rows, f, ensure_ascii=False)
 
-    def list_day(self, day):
+    def query(self, pk):
         with self.lock:
-            return [r for r in self._load() if r["PartitionKey"] == day]
+            return [r for r in self._load() if r["PartitionKey"] == pk]
 
-    def count_day(self, day):
-        return len(self.list_day(day))
-
-    def get(self, day, row):
-        for r in self.list_day(day):
-            if r["RowKey"] == row:
+    def get(self, pk, rk):
+        for r in self.query(pk):
+            if r["RowKey"] == rk:
                 return r
         return None
 
-    def insert(self, entity):
+    def insert(self, e):
         with self.lock:
             rows = self._load()
-            rows.append(entity)
+            rows.append(dict(e))
             self._save(rows)
 
-    def bump(self, day, row, field, amount=1):
+    def upsert(self, e):
         with self.lock:
             rows = self._load()
             for r in rows:
-                if r["PartitionKey"] == day and r["RowKey"] == row:
-                    r[field] = int(r.get(field, 0)) + amount
+                if r["PartitionKey"] == e["PartitionKey"] and r["RowKey"] == e["RowKey"]:
+                    r.update(e)
+                    break
+            else:
+                rows.append(dict(e))
+            self._save(rows)
+
+    def bump(self, pk, rk, deltas):
+        with self.lock:
+            rows = self._load()
+            for r in rows:
+                if r["PartitionKey"] == pk and r["RowKey"] == rk:
+                    for k, v in deltas.items():
+                        r[k] = max(0, int(r.get(k, 0)) + v)
                     self._save(rows)
                     return r
         return None
 
-    def delete(self, day, row):
+    def delete(self, pk, rk):
         with self.lock:
-            rows = [
-                r
-                for r in self._load()
-                if not (r["PartitionKey"] == day and r["RowKey"] == row)
-            ]
-            self._save(rows)
+            self._save([r for r in self._load() if not (r["PartitionKey"] == pk and r["RowKey"] == rk)])
 
-    def put_image(self, data, content_type="image/jpeg"):
+
+class LocalImages:
+    def __init__(self, root):
+        self.dir = os.path.join(root, "images")
+        os.makedirs(self.dir, exist_ok=True)
+
+    def put(self, data):
         name = f"{uuid.uuid4().hex}.jpg"
-        with open(os.path.join(self.img_dir, name), "wb") as f:
+        with open(os.path.join(self.dir, name), "wb") as f:
             f.write(data)
         return f"/local-images/{name}"
 
-    def delete_image(self, url):
+    def delete(self, url):
         if url and url.startswith("/local-images/"):
-            path = os.path.join(self.img_dir, os.path.basename(url))
-            if os.path.exists(path):
-                os.remove(path)
+            p = os.path.join(self.dir, os.path.basename(url))
+            if os.path.exists(p):
+                os.remove(p)
 
-    def asset_url(self, name):
+    def asset(self, name):
         return None
 
 
-def make_store(base_dir):
-    if CONN:
-        return AzureStore(CONN)
-    return LocalStore(os.path.join(base_dir, "data"))
+class Store:
+    def __init__(self, base_dir):
+        if CONN:
+            from azure.data.tables import TableServiceClient
+
+            svc = TableServiceClient.from_connection_string(CONN)
+            make = lambda n: AzureTable(svc, PREFIX + n)
+            self.images = AzureImages(CONN)
+        else:
+            root = os.path.join(base_dir, "data")
+            os.makedirs(root, exist_ok=True)
+            make = lambda n: LocalTable(root, n)
+            self.images = LocalImages(root)
+        self.questions = make("questions")
+        self.votes = make("votes")
+        self.comments = make("comments")

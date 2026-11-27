@@ -1,119 +1,36 @@
-<!doctype html>
-<html lang="ja">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>きょうだけ</title>
-<meta name="description" content="書いたことは、あしたの朝5時に全部消える。高校生のための掲示板。">
-<meta name="theme-color" content="#ffffff">
-<link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=10">
-</head>
-<body>
-
-<header class="top">
-  <div class="top-in">
-    <a class="logo" href="/">
-      {% if logo %}<img src="{{ logo }}" alt="" width="26" height="26">{% endif %}
-      きょうだけ
-    </a>
-    <a class="top-link" href="/about">使い方</a>
-  </div>
-  <div class="life" style="--left: {{ left_ratio }}">
-    <div class="life-bar"></div>
-  </div>
-</header>
-
-<main class="wrap">
-  <p class="reset">あと <b class="countdown" data-reset="{{ reset_at }}">--:--</b> で全部消えます</p>
-
-  <form class="composer" id="composer" action="/post" method="post" enctype="multipart/form-data">
-    {% if error %}<p class="err" role="alert">{{ error }}</p>{% endif %}
-    <p class="err" id="formErr" role="alert" hidden></p>
-    <textarea name="body" maxlength="140" rows="2" required placeholder="なにか書く" aria-label="本文"></textarea>
-    <div class="tag-pick" role="radiogroup" aria-label="タグ">
-      {% for key, label in tags.items() %}
-      <label>
-        <input type="radio" name="tag" value="{{ key }}" {{ 'checked' if loop.first }}>
-        <span>{{ label }}</span>
-      </label>
-      {% endfor %}
-    </div>
-    <div class="fields">
-      <input name="name" maxlength="12" placeholder="名前（なしでOK）" autocomplete="nickname" aria-label="名前">
-      <input name="key" maxlength="20" inputmode="numeric" placeholder="削除キー" autocomplete="off" aria-label="削除キー">
-    </div>
-    <div class="composer-foot">
-      <label class="photo-btn">
-        <input type="file" name="image" accept="image/jpeg,image/png,image/webp">
-        <span>写真</span>
-      </label>
-      <span class="file-name" id="fileName"></span>
-      <span class="count"><span id="count">0</span>/140</span>
-      <button class="send" type="submit">投稿</button>
-    </div>
-  </form>
-
-  <nav class="tabs" aria-label="タグでしぼる">
-    <a href="/" class="{{ 'on' if not current_tag }}">すべて</a>
-    {% for key, label in tags.items() %}
-    <a href="/?tag={{ key }}" class="{{ 'on' if current_tag == key }}">{{ label }}</a>
-    {% endfor %}
-  </nav>
-
-  <p class="fresh" id="freshNote" hidden><a href="/">新しい投稿があります</a></p>
-
-  {% if posts %}
-  <ol class="feed">
-    {% for p in posts %}
-    <li class="post" id="p-{{ p.RowKey }}" data-row="{{ p.RowKey }}">
-      <div class="post-head">
-        <span class="name{{ ' anon' if not p.name }}">{{ p.name or "名無し" }}</span>
-        <span class="time">{{ p.created|hm }}</span>
-        <span class="tag t-{{ p.tag }}">{{ tags[p.tag] }}</span>
-      </div>
-      <p class="body">{{ p.body }}</p>
-      {% if p.image %}
-      <a href="{{ p.image }}" target="_blank" rel="noopener"><img class="pic" src="{{ p.image }}" alt="" loading="lazy"></a>
-      {% endif %}
-
-      {% if p.replies %}
-      <ul class="replies">
-        {% for r in p.replies %}
-        <li><span class="time">{{ r.created|hm }}</span>{{ r.body }}</li>
-        {% endfor %}
-      </ul>
-      {% endif %}
-
-      <div class="acts">
-        <button type="button" class="like" data-act="like" aria-label="わかる">わかる <span class="n">{{ p.likes or "" }}</span></button>
-        <button type="button" data-act="reply">返信{% if p.replies %} <span class="n">{{ p.replies|length }}</span>{% endif %}</button>
-        <button type="button" class="more" data-act="more" aria-label="メニュー">•••</button>
-      </div>
-
-      <form class="inline reply-form" hidden>
-        <input name="body" maxlength="80" placeholder="返信を書く" autocomplete="off" required>
-        <button>送信</button>
-      </form>
-      <div class="inline more-box" hidden>
-        <form class="delete-form">
-          <input name="key" inputmode="numeric" maxlength="20" placeholder="削除キー" autocomplete="off" required>
-          <button>削除</button>
-        </form>
-        <button type="button" class="report" data-act="report">通報する</button>
-      </div>
-    </li>
-    {% endfor %}
-  </ol>
+{% extends "base.html" %}
+{% from "_card.html" import card %}
+{% block main %}
+<section class="you">
+  {% if me.ready %}
+  <p class="you-type">あなたは <b>{{ me.name }}</b></p>
+  <p class="you-sub">少数派率 {{ me.rate }}%（{{ me.n }}問）・{{ me.desc }}</p>
   {% else %}
-  <p class="empty">まだ投稿はありません</p>
+  <p class="you-type">あと<b>{{ me.need }}問</b>投票すると、あなたが何派かわかる</p>
+  <p class="you-sub">3人以上が投票した二択で集計します</p>
   {% endif %}
+</section>
 
-  {% if gone %}
-  <p class="gone">きのうの {{ gone }} 件は消えました</p>
+<nav class="tabs">
+  {% for k, label in tabs.items() %}
+  <a href="/?tab={{ k }}" class="{{ 'on' if tab == k }}">{{ label }}</a>
+  {% endfor %}
+</nav>
+
+{% if items %}
+<div class="list">
+  {% for q in items %}{{ card(q) }}{% endfor %}
+</div>
+{% else %}
+<div class="empty">
+  {% if tab == 'done' %}
+  <p>まだ締め切られた二択はありません</p>
+  {% elif tab == 'hot' %}
+  <p>意見が割れている二択はまだありません</p>
+  {% else %}
+  <p>まだ二択がありません</p>
+  <button type="button" class="make-btn big" data-open="make">最初の二択をつくる</button>
   {% endif %}
-</main>
-
-<script src="{{ url_for('static', filename='app.js') }}?v=10" defer></script>
-</body>
-</html>
+</div>
+{% endif %}
+{% endblock %}
